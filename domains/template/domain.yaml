@@ -1,0 +1,33 @@
+schema_version: data-insight-kit.domain.v1
+domain_id: template
+display_name: "Domain Template"
+description: "Copy this folder and replace placeholders with your domain rules."
+
+activation:
+  user_request_terms: []
+  source_hints: []
+  required_confirmation: true
+
+default_intake:
+  analysis_modes:
+    - candidate_prioritization
+    - status_diagnosis
+    - segment_discovery
+  report:
+    depth: standard
+    audience: mixed
+    evidence_scope: data_only
+
+external_context:
+  categories: []
+  interpretation_guards:
+    - do_not_overclaim_without_supporting_context
+    - layer_separation_required
+
+artifacts:
+  terminology: terminology.md
+  kpi_rules: kpi-rules.md
+  interview_questions: interview-questions.md
+  dashboard_patterns: dashboard-patterns.md
+  report_rubric: report-rubric.md
+  qa_rules: qa-rules.md

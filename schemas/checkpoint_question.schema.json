@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/checkpoint_question.schema.json",
+  "title": "data-insight-kit human checkpoint question",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "checkpoint_id",
+    "checkpoint_kind",
+    "header",
+    "interview_style",
+    "user_review_brief",
+    "current_understanding",
+    "blocked_decision",
+    "recommended_answer",
+    "recommended_option_id",
+    "question",
+    "chat_prompt",
+    "options",
+    "allow_free_text",
+    "response_instructions"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "data-insight-kit.checkpoint_question.v1",
+        "visualize-kit.checkpoint_question.v1"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "blocked_for_user_checkpoint"
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "enum": [
+        "data_profile",
+        "analysis_strategy",
+        "dashboard_storyboard",
+        "report_outline"
+      ]
+    },
+    "checkpoint_kind": {
+      "type": "string",
+      "enum": [
+        "data_review",
+        "strategy_review",
+        "storyboard_review",
+        "report_review"
+      ]
+    },
+    "header": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "interview_style": {
+      "type": "string",
+      "enum": [
+        "deep_interview_checkpoint"
+      ],
+      "description": "Checkpoint questions use the deep-interview style: current understanding, blocked decision, recommended answer, one question."
+    },
+    "user_review_brief": {
+      "type": "object",
+      "description": "Beginner-readable checkpoint review brief shown before internal artifacts.",
+      "required": [
+        "plain_title",
+        "why_this_checkpoint_matters",
+        "what_user_should_review",
+        "what_will_happen_next",
+        "what_this_does_not_decide",
+        "approval_question"
+      ],
+      "properties": {
+        "plain_title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "why_this_checkpoint_matters": {
+          "type": "string",
+          "minLength": 1
+        },
+        "what_user_should_review": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "what_will_happen_next": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "what_this_does_not_decide": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "approval_question": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "current_understanding": {
+      "type": "string",
+      "minLength": 1
+    },
+    "data_snapshot": {
+      "type": ["object", "null"],
+      "properties": {
+        "source_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sample_preview_path": {
+          "type": ["string", "null"]
+        },
+        "profile_path": {
+          "type": ["string", "null"]
+        },
+        "eda_path": {
+          "type": ["string", "null"]
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blocked_decision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recommended_answer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The agent's recommended answer or direction, shown before asking the user to decide."
+    },
+    "recommended_option_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "chat_prompt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Ready-to-post chat prompt formatted as 현재 이해 / 막힌 결정 / 추천 답안 / 질문."
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "description",
+          "continue_pipeline"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommended": {
+            "type": "boolean"
+          },
+          "continue_pipeline": {
+            "type": "boolean",
+            "description": "True means the wrapper may continue past this checkpoint after the answer is recorded."
+          },
+          "maps_to": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "allow_free_text": {
+      "type": "boolean"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "type",
+          "description"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "response_instructions": {
+      "type": "object",
+      "required": [
+        "write_to",
+        "apply_command",
+        "resume_command"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "checkpoint_answer"
+          ]
+        },
+        "write_to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "apply_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resume_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision_rule": {
+          "type": "string"
+        },
+        "human_response_required": {
+          "type": "boolean"
+        },
+        "allowed_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ask_user_question",
+              "user_chat",
+              "manual_cli"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "agent_assumption_rule": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,15 @@
+# 사용자 분석 run 출력물은 로컬 전용 (개인·민감 데이터 포함 가능).
+runs/*
+
+# QA/렌더 테스트 산출물 (재생성 가능)
+runs/**/_render.png
+runs/**/intermediate/
+
+# 비밀정보 — DB 자격증명 절대 커밋 금지
+.env
+connectors/.env
+**/.env
+
+# Python
+__pycache__/
+*.pyc

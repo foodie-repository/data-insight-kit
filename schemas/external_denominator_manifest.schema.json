@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/external_denominator_manifest.schema.json",
+  "title": "external_denominator_manifest",
+  "description": "선택 외부 context adapter의 lineage, join 품질, 지표 layer 계약.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "status", "adapters"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "data-insight-kit.external_denominator_manifest.v1",
+        "visualize-kit.external_denominator_manifest.v1"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["planned", "available", "partial", "not_used"]
+    },
+    "objective": {
+      "type": ["string", "null"],
+      "description": "외부 context를 결합하려는 판단 목적."
+    },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/adapter"
+      }
+    }
+  },
+  "$defs": {
+    "adapter": {
+      "type": "object",
+      "required": [
+        "id",
+        "category",
+        "source_ref",
+        "source_type",
+        "snapshot_at",
+        "spatial_grain",
+        "join_keys",
+        "coverage",
+        "fields",
+        "limitations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+$"
+        },
+        "category": {
+          "enum": [
+            "population",
+            "foot_traffic",
+            "rent",
+            "sales",
+            "business_dynamics",
+            "area",
+            "competition",
+            "mobility",
+            "custom"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "manifest.sources[].id 또는 dashboard_data.sources[].id와 연결 가능한 안정 참조."
+        },
+        "source_type": {
+          "enum": ["local_file", "remote_snapshot", "duckdb", "api_snapshot", "manual", "derived"]
+        },
+        "snapshot_at": {
+          "type": ["string", "null"],
+          "description": "데이터 기준일 또는 수집일. 알 수 없으면 null과 limitations 설명을 함께 둔다."
+        },
+        "spatial_grain": {
+          "enum": ["address", "coordinate", "admin_dong", "sigungu", "province", "grid", "trade_area", "custom"]
+        },
+        "join_keys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["left", "right", "quality"],
+            "additionalProperties": false,
+            "properties": {
+              "left": { "type": "string" },
+              "right": { "type": "string" },
+              "quality": { "enum": ["exact", "normalized", "spatial_nearest", "spatial_contains", "manual", "unknown"] }
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "required": ["grain_count", "matched_count", "match_rate", "null_rate"],
+          "additionalProperties": false,
+          "properties": {
+            "grain_count": { "type": "integer", "minimum": 0 },
+            "matched_count": { "type": "integer", "minimum": 0 },
+            "match_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "null_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "notes": { "type": ["string", "null"] }
+          }
+        },
+        "acquisition": {
+          "type": "object",
+          "description": "외부 context 스냅샷을 만들 때의 수집·페이지네이션·행 수 확인 메타. 기존 manifest 호환을 위해 선택 필드다.",
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "enum": ["file_snapshot", "api_snapshot", "paged_api", "browser_export", "manual", "derived", "unknown"]
+            },
+            "pagination_checked": {
+              "type": ["boolean", "null"],
+              "description": "페이지·커서·분할 반복 조회처럼 전체 grain 수집을 확인했는지 여부."
+            },
+            "page_count": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "collected_row_count": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "expected_total": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "원천 API가 알려준 전체 행 수. 제공되지 않으면 null."
+            },
+            "page_size": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "description": "페이지 기반 수집에서 사용한 요청 단위."
+            },
+            "expected_grain_source": {
+              "type": ["string", "null"],
+              "description": "coverage의 기대 grain_count를 판단한 기준."
+            },
+            "notes": {
+              "type": ["string", "null"]
+            }
+          }
+        },
+        "grain_quality": {
+          "type": "object",
+          "description": "공간 grain 혼재, 중복 grain, denominator 합산 기준을 기록하는 선택 품질 메타.",
+          "additionalProperties": false,
+          "properties": {
+            "canonical_grain": {
+              "enum": ["address", "coordinate", "admin_dong", "sigungu", "province", "grid", "trade_area", "custom"]
+            },
+            "raw_grain_levels": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "has_upper_lower_mix": {
+              "type": ["boolean", "null"],
+              "description": "상위 행정구역과 하위 행정구역이 원천에 함께 들어 있어 단순 합산 중복 위험이 있는지 여부."
+            },
+            "matched_grain_only": {
+              "type": ["boolean", "null"],
+              "description": "집계가 조인에 성공한 canonical grain 행만 사용했는지 여부."
+            },
+            "denominator_aggregation_basis": {
+              "enum": ["matched_grain", "source_grain", "raw_source_total", "weighted", "not_summed", "unknown"]
+            },
+            "coarse_aggregation": {
+              "type": ["boolean", "null"],
+              "description": "source grain을 분석 grain으로 거칠게 집계하거나 수동 매핑했는지 여부."
+            },
+            "aggregation_grain": {
+              "type": ["string", "null"],
+              "description": "coarse aggregation 이후 분석에 사용한 grain. 예: source_region_to_analysis_region, custom_segment_to_reporting_segment."
+            },
+            "duplicate_grain_policy": {
+              "type": ["string", "null"],
+              "description": "중복 grain 또는 상하위 grain 혼재를 제거·보류·가중 처리한 기준."
+            },
+            "notes": {
+              "type": ["string", "null"]
+            }
+          }
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "meaning",
+              "unit",
+              "denominator",
+              "metric_layer",
+              "allowed_uses",
+              "prohibited_interpretations"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "meaning": { "type": "string" },
+              "unit": { "type": ["string", "null"] },
+              "denominator": { "type": ["string", "null"] },
+              "metric_layer": {
+                "enum": ["demand", "cost", "performance", "spatial", "competition", "context", "coverage"]
+              },
+              "allowed_uses": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              },
+              "prohibited_interpretations": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

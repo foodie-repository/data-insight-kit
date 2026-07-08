@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/intake_questions.schema.json",
+  "title": "data-insight-kit guided intake question",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "question_id",
+    "header",
+    "user_analysis_brief",
+    "current_understanding",
+    "blocked_decision",
+    "recommended_option_id",
+    "question",
+    "options",
+    "allow_free_text",
+    "response_instructions"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "data-insight-kit.intake_question.v1",
+        "visualize-kit.intake_question.v1"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "blocked_for_user_question"
+    },
+    "question_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable id for the unresolved decision, e.g. decision_context."
+    },
+    "question_kind": {
+      "type": "string",
+      "enum": [
+        "decision_context",
+        "scope_focus",
+        "report_contract",
+        "external_adapter_policy",
+        "custom"
+      ],
+      "description": "Optional typed decision for UI handoff. Missing values are treated as custom/backward-compatible."
+    },
+    "header": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 24
+    },
+    "user_analysis_brief": {
+      "type": "object",
+      "description": "Beginner-readable analysis planning brief shown before technical execution details.",
+      "required": [
+        "plain_title",
+        "analysis_goal",
+        "answerable_questions",
+        "data_can_support",
+        "not_answerable",
+        "analysis_options",
+        "checkpoint_plan",
+        "preflight_requirements",
+        "approval_options",
+        "approval_question"
+      ],
+      "properties": {
+        "plain_title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "analysis_goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "answerable_questions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "data_can_support": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "not_answerable": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "analysis_options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["label", "description"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "recommended": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "checkpoint_plan": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "preflight_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Reader-facing prerequisites or blockers before execution, without exposing secrets or internal commands."
+        },
+        "approval_options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["label", "description"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "recommended": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "Small approval choices the user can answer directly before execution continues."
+        },
+        "approval_question": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "current_understanding": {
+      "type": "string",
+      "minLength": 1
+    },
+    "blocked_decision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recommended_option_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommended": {
+            "type": "boolean"
+          },
+          "maps_to": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "allow_free_text": {
+      "type": "boolean"
+    },
+    "adapter_selection": {
+      "type": ["object", "null"],
+      "description": "Optional helper metadata for external adapter selection questions.",
+      "properties": {
+        "selection_mode": {
+          "type": "string",
+          "enum": ["none", "core", "full", "risk", "custom"]
+        },
+        "available_categories": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "recommended_categories": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "registry_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "response_instructions": {
+      "type": "object",
+      "required": ["write_to", "resume_command"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["draft", "final"],
+          "description": "draft accumulates interview answers before final intake.yaml is written."
+        },
+        "write_to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "finalize_to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "apply_command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional helper command that writes the selected answer into intake_draft.yaml."
+        },
+        "resume_command": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "interview_state": {
+      "type": "object",
+      "required": [
+        "question_index",
+        "max_questions",
+        "answered_decisions",
+        "remaining_decisions",
+        "can_finalize_after_answer"
+      ],
+      "properties": {
+        "question_index": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "max_questions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "answered_decisions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "remaining_decisions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "can_finalize_after_answer": {
+          "type": "boolean"
+        },
+        "finalization_rule": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

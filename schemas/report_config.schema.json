@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/report_config.schema.json",
+  "title": "report_config",
+  "description": "요약/심층 보고서의 깊이, 독자, 근거 범위를 분리하는 선택 계약.",
+  "type": "object",
+  "required": ["depth", "audience", "evidence_scope"],
+  "additionalProperties": false,
+  "properties": {
+    "depth": {
+      "enum": ["brief", "standard", "deep"],
+      "default": "standard",
+      "description": "brief=핵심만, standard=기본 요약 보고서, deep=방법론·한계·부록까지 포함한 심층 보고서."
+    },
+    "audience": {
+      "enum": ["executive", "analyst", "operator", "mixed"],
+      "default": "mixed",
+      "description": "보고서 표현과 강조점을 조정하는 독자 유형."
+    },
+    "evidence_scope": {
+      "enum": ["data_only", "web_context"],
+      "default": "data_only",
+      "description": "data_only=현재 데이터 안에서 검증되는 사실만, web_context=명시적 선택 시 외부 맥락을 별도 출처와 함께 보강."
+    }
+  }
+}

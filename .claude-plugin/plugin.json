@@ -1,0 +1,7 @@
+{
+  "name": "data-insight-kit",
+  "version": "0.1.0",
+  "description": "파일·API 스냅샷·원격 Parquet·선택 DB를 받아 사용자 확인 checkpoint를 거쳐 데이터 주입형 대시보드와 보고서를 생성하는 범용 AI 분석 키트.",
+  "author": { "name": "foodie" },
+  "license": "MIT"
+}

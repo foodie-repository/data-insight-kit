@@ -1,0 +1,25 @@
+{
+  "name": "light",
+  "colors": {
+    "bg": "#efebe3",
+    "card": "#fbfaf7",
+    "ink": "#1c1916",
+    "muted": "#6f665b",
+    "soft": "#9a9085",
+    "grid": "rgba(28,25,22,0.08)",
+    "axis": "rgba(28,25,22,0.28)",
+    "good": "#2f9e7d",
+    "bad": "#cf6157",
+    "warn": "#cf922f",
+    "neutral": "#5a5048",
+    "info": "#4a6fa5",
+    "cat1": "#2f9e7d",
+    "cat2": "#4a6fa5",
+    "cat3": "#cf922f",
+    "cat4": "#8a6fb2",
+    "cat5": "#b05d7a",
+    "cat6": "#4f8f8f",
+    "cat7": "#8a7b45",
+    "cat8": "#707070"
+  }
+}

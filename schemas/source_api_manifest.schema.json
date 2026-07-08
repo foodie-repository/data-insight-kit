@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/source_api_manifest.schema.json",
+  "title": "data-insight-kit primary API source manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "created_at",
+    "source",
+    "auth",
+    "acquisition",
+    "snapshot",
+    "lineage",
+    "limitations"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "data-insight-kit.source_api_manifest.v1",
+        "visualize-kit.source_api_manifest.v1"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "smoke_tested",
+        "collected",
+        "available",
+        "blocked"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "adapter",
+        "request_url",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "const": "primary_api"
+        },
+        "request_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "endpoint_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST"
+          ]
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": [
+        "required",
+        "key_env_candidates",
+        "secret_material_stored"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "enum": [
+            "unknown",
+            "required",
+            "not_required"
+          ]
+        },
+        "key_env_candidates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "selected_key_env": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "secret_material_stored": {
+          "const": false
+        }
+      }
+    },
+    "acquisition": {
+      "type": "object",
+      "required": [
+        "method",
+        "smoke_test_required",
+        "pagination_checked",
+        "pagination",
+        "snapshot_required",
+        "preferred_snapshot_format",
+        "output_dir"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "enum": [
+            "api_snapshot",
+            "paged_api"
+          ]
+        },
+        "smoke_test_required": {
+          "type": "boolean"
+        },
+        "pagination_checked": {
+          "type": "boolean"
+        },
+        "pagination": {
+          "type": "string"
+        },
+        "page_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "collected_row_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "expected_row_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "snapshot_required": {
+          "type": "boolean"
+        },
+        "preferred_snapshot_format": {
+          "enum": [
+            "parquet",
+            "csv",
+            "jsonl"
+          ]
+        },
+        "output_dir": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "path",
+        "format",
+        "row_count",
+        "columns",
+        "fetched_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "parquet",
+            "csv",
+            "jsonl",
+            null
+          ]
+        },
+        "row_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fetched_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "source_ref",
+        "manifest_paths"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocker": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "auth",
+            "quota",
+            "endpoint",
+            "network",
+            "pagination",
+            "schema",
+            "unknown"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/chart_spec.schema.json",
+  "title": "chart_spec",
+  "description": "범용 표 데이터에서 질문, 분석법, 실행 가능한 계산, 차트 선택, 최종 dashboard_data 매핑을 잇는 중간 계약.",
+  "type": "object",
+  "required": ["meta", "semantic_profile_ref", "charts"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["run_id", "generated_at", "mode", "audience"],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "mode": { "enum": ["directed", "exploratory"] },
+        "audience": { "enum": ["executive", "analyst", "operator", "mixed"] },
+        "domain": { "type": ["string", "null"] }
+      }
+    },
+    "semantic_profile_ref": {
+      "type": "string",
+      "description": "outputs/01_profile.md 또는 별도 semantic profile 산출물 경로."
+    },
+    "dashboard_story": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "headline": { "type": "string" },
+        "decision": { "type": "string" },
+        "caveat": { "type": "string" }
+      }
+    },
+    "charts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/chartPlan" }
+    }
+  },
+  "$defs": {
+    "chartPlan": {
+      "type": "object",
+      "required": [
+        "id",
+        "question",
+        "method",
+        "grain",
+        "data_requirements",
+        "calculation",
+        "chart",
+        "insight",
+        "dashboard_mapping"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "최종 dashboard_data.panels[].charts[].id 와 일치해야 하는 안정 ID."
+        },
+        "question": {
+          "type": "string",
+          "description": "이 차트가 답하는 구체적 질문."
+        },
+        "method": {
+          "enum": [
+            "trend",
+            "ranking",
+            "distribution",
+            "relationship",
+            "composition",
+            "contribution",
+            "cohort",
+            "segmentation",
+            "anomaly",
+            "forecast_signal",
+            "quality"
+          ]
+        },
+        "grain": {
+          "type": "object",
+          "required": ["row_meaning", "time_grain", "entity_grain"],
+          "additionalProperties": false,
+          "properties": {
+            "row_meaning": { "type": "string" },
+            "time_grain": { "type": ["string", "null"] },
+            "entity_grain": { "type": ["string", "null"] }
+          }
+        },
+        "data_requirements": {
+          "type": "object",
+          "required": ["measures", "dimensions", "time_columns"],
+          "additionalProperties": false,
+          "properties": {
+            "measures": { "type": "array", "items": { "type": "string" } },
+            "dimensions": { "type": "array", "items": { "type": "string" } },
+            "time_columns": { "type": "array", "items": { "type": "string" } },
+            "filters": { "type": "array", "items": { "type": "string" } },
+            "sample_policy": { "type": ["string", "null"] }
+          }
+        },
+        "calculation": {
+          "type": "object",
+          "required": ["source_ref", "sql", "metric_definition", "unit", "denominator"],
+          "additionalProperties": false,
+          "properties": {
+            "source_ref": { "type": "string" },
+            "sql": {
+              "type": "string",
+              "description": "재실행 가능한 단일 SELECT/WITH SQL 또는 파일 입력이면 동등한 Polars/DuckDB 계산 설명."
+            },
+            "metric_definition": { "type": "string" },
+            "unit": { "type": "string" },
+            "denominator": { "type": ["string", "null"] }
+          }
+        },
+        "chart": {
+          "type": "object",
+          "required": ["type", "why_this_chart", "encoding"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": [
+                "line",
+                "area",
+                "bar",
+                "stacked_bar",
+                "histogram",
+                "scatter",
+                "heatmap",
+                "boxplot",
+                "waterfall",
+                "slope"
+              ]
+            },
+            "why_this_chart": { "type": "string" },
+            "encoding": {
+              "type": "object",
+              "required": ["x", "y"],
+              "additionalProperties": {
+                "type": ["string", "number", "boolean", "array", "object", "null"]
+              },
+              "properties": {
+                "x": { "type": "string" },
+                "y": { "type": "string" },
+                "color": { "type": ["string", "null"] },
+                "size": { "type": ["string", "null"] },
+                "series": { "type": ["string", "null"] }
+              }
+            }
+          }
+        },
+        "chart_recommendation": {
+          "type": ["object", "null"],
+          "description": "User-facing explanation of why this data should use this chart, with alternatives considered.",
+          "additionalProperties": false,
+          "properties": {
+            "data_or_metric": {
+              "type": "string",
+              "description": "Plain-language data or metric used in the chart."
+            },
+            "comparison_basis": {
+              "type": "string",
+              "description": "Plain-language comparison axis, segment, period, or grouping."
+            },
+            "recommended_chart": {
+              "type": "string",
+              "description": "Plain-language recommended chart type."
+            },
+            "why_recommended": {
+              "type": "string",
+              "description": "Why this chart best answers the question."
+            },
+            "alternative_chart": {
+              "type": ["string", "null"],
+              "description": "Alternative chart considered, if any."
+            },
+            "alternative_tradeoff": {
+              "type": ["string", "null"],
+              "description": "Why the alternative was not chosen or when it may be preferable."
+            }
+          }
+        },
+        "insight": {
+          "type": "object",
+          "required": ["finding", "evidence", "limit"],
+          "additionalProperties": false,
+          "properties": {
+            "finding": { "type": "string" },
+            "evidence": { "type": "string" },
+            "limit": { "type": "string" }
+          }
+        },
+        "dashboard_mapping": {
+          "type": "object",
+          "required": ["panel_id", "chart_id", "priority"],
+          "additionalProperties": false,
+          "properties": {
+            "panel_id": { "type": "string" },
+            "chart_id": { "type": "string" },
+            "priority": { "type": "integer", "minimum": 1 },
+            "uses_kpi_ids": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "dark",
+  "colors": {
+    "bg": "#14120f",
+    "card": "#1e1b17",
+    "ink": "#f2ede4",
+    "muted": "#a59a8d",
+    "soft": "#6f665b",
+    "grid": "rgba(242,237,228,0.10)",
+    "axis": "rgba(242,237,228,0.30)",
+    "good": "#46b892",
+    "bad": "#e07d74",
+    "warn": "#e0a948",
+    "neutral": "#c7bdb0",
+    "info": "#7aa0d4",
+    "cat1": "#46b892",
+    "cat2": "#7aa0d4",
+    "cat3": "#e0a948",
+    "cat4": "#a991d4",
+    "cat5": "#d1849d",
+    "cat6": "#6eb5b5",
+    "cat7": "#b2a35f",
+    "cat8": "#a6a6a6"
+  }
+}
