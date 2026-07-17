@@ -3,7 +3,7 @@
 기록 원칙: expert-guided analysis routing v1부터 단계별 커밋 요약과 검증 결과를 남긴다.
 구현 중단·재개 시 이 파일의 "진행 상태"가 재개 지점이다.
 
-## [Unreleased] — v0.2.0 distribution (branch: codex/data-insight-kit-v0-2-release)
+## [0.2.0] — 2026-07-18 — distribution
 
 ### 진행 상태
 
@@ -23,10 +23,18 @@
 - fresh distribution 검증에서 입력 없는 README 설치 확인 `--dry-run`이 source gate에
   막히는 결함을 발견했다. dry-run은 명령 계획을 출력하되 실제 실행은 기존처럼
   source가 없으면 차단하도록 wrapper와 clean-copy 회귀 테스트를 보강했다.
-- 다음: source release candidate 전체 검증·커밋 후, 최신 `vk-dist/main` 기반
-  distribution tree 동기화·검증·fast-forward push·원격 설치 smoke·v0.2.0 tag.
-- 블라인드 UAT와 domain/statistical end-to-end smoke는 실제 사용자 답변이 필요한
-  후속 작업이며 이번 release에서 대리 승인하지 않는다.
+- source commit `0a2833c`의 추적 subtree와 distribution staging tree가 Git tree
+  hash `8cc6cd5...`로 일치함을 확인했다. 배포본 전체 테스트는
+  `360 passed, 30 skipped, 128 subtests passed`이며 Claude strict validation과
+  Codex/Claude 로컬 격리 설치·hook/skill/core dry-run이 모두 green이다.
+- 최신 `vk-dist/main`을 부모로 distribution commit `106f219`를 만들고 일반
+  fast-forward push했다. GitHub 원격만 사용한 새 격리 환경에서 Codex 0.144.1과
+  Claude Code 2.1.212가 모두 v0.2.0, skill 1개, agent 8개, hook 1개를 발견했고
+  입력 없는 core dry-run을 통과했다.
+- 원격 설치 smoke를 통과한 distribution commit `106f219`에 annotated tag
+  `v0.2.0`을 생성해 push했다. tag는 이후 문서 마감 commit으로 이동하지 않는다.
+- 다음은 실제 사용자가 수행하는 블라인드 UAT다. domain/statistical end-to-end
+  smoke도 실제 사용자 답변이 필요하며 이번 release에서 대리 승인하지 않는다.
 
 ## [Unreleased] — dashboard freeform v5 (branch: codex/dashboard-freeform-v5)
 
