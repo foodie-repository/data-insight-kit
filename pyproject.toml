@@ -1,0 +1,28 @@
+# data-insight-kit 전용 환경 정의 (spec §7.3, C3 확정).
+# 심화 분석 dependency는 이 파일이 정의하는 kit 전용 .venv에만 설치한다.
+# 설치는 사용자가 analysis_strategy checkpoint에서 명시 옵션으로 승인한 뒤
+# wrapper가 실행한다: uv sync --project data-insight-kit --extra <group>
+[project]
+name = "data-insight-kit"
+version = "0.2.0"
+description = "데이터 주입형 분석 키트 — guided pipeline, checkpoint gate, QA"
+requires-python = ">=3.11"
+dependencies = [
+    "jsonschema>=4.0",
+]
+
+[project.optional-dependencies]
+# v1 extras는 stats/ml 2개만 둔다. interactive-viz/echarts는 v4 (spec §7.1).
+stats = [
+    "scipy>=1.11",
+    "statsmodels>=0.14",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+]
+ml = [
+    "scikit-learn>=1.4",
+]
+
+[tool.uv]
+# 배포 패키지가 아니라 환경 정의 전용 (빌드 백엔드 불필요).
+package = false

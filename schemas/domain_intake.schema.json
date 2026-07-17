@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/domain_intake.schema.json",
+  "title": "data-insight-kit run-local domain expert intake",
+  "description": "domain mode에서 도메인 전문가 답변을 구조화하는 run-local 계약. canonical 위치는 runs/<run-id>/input/domain_intake.json. domain_readiness.status는 에이전트 기록값이 아니라 필수 항목 충족에서 결정적으로 계산되며, QA는 같은 규칙으로 재계산해 불일치 시 BLOCK한다. 필수 항목: row_meaning, entity_grain, column_semantics(1+), exclusion_rules, objective, forbidden_claims — spec §8.5.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "domain_scope",
+    "objective",
+    "row_meaning",
+    "entity_grain",
+    "column_semantics",
+    "exclusion_rules",
+    "kpi_definitions",
+    "forbidden_claims",
+    "evidence_boundaries",
+    "open_questions",
+    "domain_readiness"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": ["data-insight-kit.domain_intake.v1"]
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "domain_scope": {
+      "type": ["string", "null"],
+      "description": "산업/업무/조직/분석 대상 범위."
+    },
+    "objective": {
+      "type": ["string", "null"],
+      "description": "도메인 맥락에서 내릴 판단."
+    },
+    "row_meaning": {
+      "type": ["string", "null"],
+      "description": "행 1개가 의미하는 업무 단위."
+    },
+    "entity_grain": {
+      "type": ["string", "null"],
+      "description": "핵심 엔티티와 분석 grain (고객, 상품, 장비, lot, 지점, 거래 등)."
+    },
+    "time_grain": {
+      "type": ["string", "null"],
+      "description": "일, 주, 월, 공정 시점, 이벤트 시점 등 시간 단위."
+    },
+    "terminology": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["term", "meaning"],
+        "properties": {
+          "term": { "type": "string", "minLength": 1 },
+          "meaning": { "type": "string", "minLength": 1 },
+          "user_label": {
+            "type": ["string", "null"],
+            "description": "보고서/대시보드에 쓰는 사용자용 표현."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "column_semantics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["column", "meaning"],
+        "properties": {
+          "column": { "type": "string", "minLength": 1 },
+          "meaning": { "type": "string", "minLength": 1 },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["value", "meaning"],
+              "properties": {
+                "value": { "type": ["string", "number"] },
+                "meaning": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exclusion_rules": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "제외해야 할 행, 상태, 테스트, 취소, 중복, 특수 케이스."
+    },
+    "kpi_definitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "formula"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "formula": { "type": "string", "minLength": 1 },
+          "unit": { "type": ["string", "null"] },
+          "denominator": { "type": ["string", "null"] },
+          "comparison_basis": { "type": ["string", "null"] },
+          "required_data": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "segments": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "reference_data": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "forbidden_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["phrase"],
+        "properties": {
+          "phrase": {
+            "type": "string",
+            "minLength": 1,
+            "description": "dashboard/report visible text에서 BLOCK되는 명시 문구."
+          },
+          "allowed_when": {
+            "type": ["string", "null"],
+            "description": "이 표현이 허용되는 조건 (없으면 전면 금지)."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence_boundaries": {
+      "type": "object",
+      "required": ["can_say", "cannot_say"],
+      "properties": {
+        "can_say": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "cannot_say": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "generated_by": {
+      "type": "string",
+      "description": "인터뷰 답변에서 파생 생성된 경우 생성기 id (interview-loop-v2 §8.2). 수동 주입 파일에는 없다."
+    },
+    "source_answer_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "파생 근거가 된 checkpoint_answers 레코드의 answer_id 목록."
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "파생 생성 시각 (UTC)."
+    },
+    "domain_readiness": {
+      "type": "object",
+      "required": ["status", "computed_at", "rule", "missing_required"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["ready", "partial", "insufficient"]
+        },
+        "computed_at": { "type": "string", "minLength": 1 },
+        "rule": {
+          "const": "deterministic-v1",
+          "description": "결정적 계산 규칙 버전. QA가 같은 규칙으로 재계산한다."
+        },
+        "missing_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "비어 있는 공통/route별 필수 항목 목록."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

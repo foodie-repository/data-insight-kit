@@ -3,7 +3,34 @@
 `data-insight-kit`은 범용 core와 도메인 확장을 분리합니다.
 
 core는 데이터 연결, 탐색, 분석 설계, 차트 설계, 대시보드 렌더링, QA를 담당합니다.
-도메인별 판단 기준은 `domain pack`으로 추가합니다.
+도메인 지식은 **인터뷰**로 시작해 쌓고, 반복 사용할 지식만 `domain pack`으로
+승격합니다 (상세 계약: `docs/specs/interview-loop-v2.md` §8).
+
+## 시작은 인터뷰: domain pack 없이 (기본 경로)
+
+처음 도메인 데이터를 다룰 때는 pack 파일을 만들 필요가 없습니다.
+
+1. run의 `manifest.json`에 `"domain_mode": true`를 표시하면(또는 intake에서
+   회사·업무 데이터라고 밝히면) 각 확인 단계 질문에 추가 확인 질문이 부족한
+   항목 우선으로 붙습니다 — 행의 의미, 핵심 대상, 컬럼 의미, 제외 기준(데이터
+   확인) → 지표 계산 기준, 비교 축, 기준 자료, 피해야 할 표현(분석 방향) →
+   판단 범위(1차 결과 확인) → 용어(보고서).
+2. 추가 확인 질문의 답변은 진행 여부와 무관하게 해석 기준으로만 쌓입니다.
+   업무 기준이 부족한 채 진행하면 도메인 결론(추천·원인·성과 확정)은 QA가
+   차단합니다 — 인터뷰는 기회를 늘릴 뿐 게이트를 약화하지 않습니다.
+3. 답변이 쌓이면 도메인 확인 정보를 파생 생성합니다.
+
+```bash
+python3 scripts/build_domain_intake.py <run-id>
+# -> runs/<run-id>/input/domain_intake.json (수동 작성 파일이 있으면 그 파일 우선)
+```
+
+4. run에서 검증된 재사용 지식은 `outputs/domain_pack_update_candidates.md`에
+   후보로 남기고, 사람이 검토해 pack으로 승격합니다(아래 절차). run 중
+   `domains/<domain>/` 자동 수정은 훅이 차단합니다.
+
+pack이 이미 있으면 인터뷰는 pack이 못 덮는 이번 run의 불확실성만 묻게 되어
+짧아집니다.
 
 ## domain pack이 필요한 경우
 

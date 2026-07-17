@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/run_context.schema.json",
+  "title": "run_context",
+  "description": "새 분석 run이 기존 run 산출물을 참조할 수 있는지 정의하는 실행 컨텍스트 계약.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "mode",
+    "allow_prior_run_reference",
+    "reference_runs",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": ["data-insight-kit.run_context.v1"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "enum": [
+        "fresh_analysis",
+        "revise_previous",
+        "compare_with_previous",
+        "resume_run"
+      ]
+    },
+    "domain_mode": {
+      "type": "boolean",
+      "description": "업무 도메인 인터뷰와 조건부 결과 검토를 활성화하는 sticky run 스탬프. 이전 run 호환을 위해 optional이다."
+    },
+    "allow_prior_run_reference": {
+      "type": "boolean"
+    },
+    "reference_runs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "user_request_indicates_prior_reference": {
+      "type": "boolean"
+    },
+    "default_reason": {
+      "type": ["string", "null"]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": { "const": "fresh_analysis" }
+        }
+      },
+      "then": {
+        "properties": {
+          "allow_prior_run_reference": { "const": false },
+          "reference_runs": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "allow_prior_run_reference": { "const": true }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "enum": ["revise_previous", "compare_with_previous", "resume_run"]
+          }
+        }
+      }
+    }
+  ]
+}

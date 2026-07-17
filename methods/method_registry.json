@@ -1,0 +1,172 @@
+{
+  "schema_version": "data-insight-kit.method_registry.v1",
+  "updated_at": "2026-07-10",
+  "description": "LLM이 분석 방법을 임의로 invent하지 않게 하는 단일 원천. route별 허용 method, 전제 조건, dependency group, 금지 결론을 정의한다. JSON인 이유: 결정적 코어는 stdlib+jsonschema만 사용한다 (spec §6).",
+  "route_policy": {
+    "core_methods_always_allowed": true,
+    "v1_downgrade_only_routes": ["predictive", "causal_experiment"],
+    "note": "core method(빈 dependency_groups)는 모든 route에서 허용된다. v1_downgrade_only_routes는 v1 registry에 전용 method가 없어 항상 후보 판정+강등 대상이다 (spec §12.1)."
+  },
+  "dependency_allowlist": {
+    "stats": ["scipy", "statsmodels", "matplotlib", "seaborn"],
+    "ml": ["scikit-learn"]
+  },
+  "methods": [
+    {
+      "id": "ranking",
+      "route": "descriptive",
+      "label": "순위·상하위 구조 확인",
+      "requires": {
+        "data_conditions": ["categorical_or_entity_key", "numeric_or_count_measure"],
+        "domain_conditions": []
+      },
+      "dependency_groups": [],
+      "allowed_questions": ["무엇이 많고 적은가?", "상위·하위 항목은 무엇인가?"],
+      "blocked_claims": ["원인 단정", "성과 확정", "추천 확정"],
+      "recommended_charts": ["bar", "table"]
+    },
+    {
+      "id": "distribution",
+      "route": "descriptive",
+      "label": "분포 확인",
+      "requires": {
+        "data_conditions": ["numeric_measure"],
+        "domain_conditions": []
+      },
+      "dependency_groups": [],
+      "allowed_questions": ["값이 어떻게 퍼져 있는가?", "치우침이나 꼬리가 있는가?"],
+      "blocked_claims": ["원인 단정", "정규성 확정"],
+      "recommended_charts": ["histogram", "boxplot"]
+    },
+    {
+      "id": "composition",
+      "route": "descriptive",
+      "label": "구성 비율 확인",
+      "requires": {
+        "data_conditions": ["categorical_group", "count_or_sum_measure"],
+        "domain_conditions": []
+      },
+      "dependency_groups": [],
+      "allowed_questions": ["전체에서 각 부분이 차지하는 비중은?"],
+      "blocked_claims": ["수요 확정", "성과 확정"],
+      "recommended_charts": ["stacked_bar", "treemap", "donut"]
+    },
+    {
+      "id": "trend",
+      "route": "descriptive",
+      "label": "추세 확인",
+      "requires": {
+        "data_conditions": ["time_axis", "numeric_or_count_measure"],
+        "domain_conditions": []
+      },
+      "dependency_groups": [],
+      "allowed_questions": ["시간에 따라 어떻게 변하는가?"],
+      "blocked_claims": ["원인 단정", "미래 확정 예측"],
+      "recommended_charts": ["line", "area"]
+    },
+    {
+      "id": "quality",
+      "route": "diagnostic",
+      "label": "데이터 품질·예외 진단",
+      "requires": {
+        "data_conditions": ["row_level_access"],
+        "domain_conditions": []
+      },
+      "dependency_groups": [],
+      "allowed_questions": ["결측·중복·이상값·제외 대상은 어디에 있는가?", "어떤 세그먼트가 예외적으로 두드러지는가?"],
+      "blocked_claims": ["원인 단정", "책임 귀속"],
+      "recommended_charts": ["bar", "heatmap", "table"]
+    },
+    {
+      "id": "group_difference_candidate",
+      "route": "statistical",
+      "label": "그룹 차이 후보 판정",
+      "requires": {
+        "data_conditions": ["numeric_measure", "categorical_group", "sample_size_check", "independent_sampling_unit"],
+        "domain_conditions": ["group_definition_valid", "measure_definition_valid"]
+      },
+      "dependency_groups": ["stats"],
+      "allowed_questions": ["그룹 간 차이가 우연인지 확인할 필요가 있는가?"],
+      "blocked_claims": ["원인 단정", "효과 확정", "우열 확정"],
+      "recommended_charts": ["boxplot", "bar", "confidence_interval"]
+    },
+    {
+      "id": "correlation_candidate",
+      "route": "statistical",
+      "label": "상관 관계 후보 판정",
+      "requires": {
+        "data_conditions": ["two_numeric_measures", "sample_size_check"],
+        "domain_conditions": ["measure_definition_valid"]
+      },
+      "dependency_groups": ["stats"],
+      "allowed_questions": ["두 지표가 함께 움직이는가?"],
+      "blocked_claims": ["인과 단정", "원인 단정"],
+      "recommended_charts": ["scatter", "heatmap"]
+    },
+    {
+      "id": "simple_regression_candidate",
+      "route": "statistical",
+      "label": "단순 회귀 후보 판정",
+      "requires": {
+        "data_conditions": ["numeric_target", "numeric_or_encoded_predictor", "sample_size_check"],
+        "domain_conditions": ["measure_definition_valid", "predictor_business_plausible"]
+      },
+      "dependency_groups": ["stats"],
+      "allowed_questions": ["어떤 요인이 결과와 함께 움직이는지 후보를 확인할 필요가 있는가?"],
+      "blocked_claims": ["인과 단정", "효과 크기 확정", "추천 확정"],
+      "recommended_charts": ["scatter", "line"]
+    },
+    {
+      "id": "confidence_interval_candidate",
+      "route": "statistical",
+      "label": "신뢰구간 후보 판정",
+      "requires": {
+        "data_conditions": ["numeric_measure", "sample_size_check"],
+        "domain_conditions": ["measure_definition_valid"]
+      },
+      "dependency_groups": ["stats"],
+      "allowed_questions": ["관측된 수치가 표본 때문에 흔들릴 범위는 어느 정도인가?"],
+      "blocked_claims": ["모수 확정", "차이 확정"],
+      "recommended_charts": ["confidence_interval", "bar"]
+    },
+    {
+      "id": "clustering_candidate",
+      "route": "ml_exploratory",
+      "label": "군집 후보 탐색",
+      "requires": {
+        "data_conditions": ["multiple_numeric_features", "sample_size_check"],
+        "domain_conditions": ["feature_semantics_confirmed", "domain_review_available"]
+      },
+      "dependency_groups": ["ml"],
+      "allowed_questions": ["자연스럽게 묶이는 그룹이 있는가?"],
+      "blocked_claims": ["군집 명명 확정", "세그먼트 전략 확정"],
+      "recommended_charts": ["scatter", "heatmap"]
+    },
+    {
+      "id": "anomaly_candidate",
+      "route": "ml_exploratory",
+      "label": "이상치 후보 탐색",
+      "requires": {
+        "data_conditions": ["multiple_numeric_features"],
+        "domain_conditions": ["exclusion_rules_confirmed", "domain_review_available"]
+      },
+      "dependency_groups": ["ml"],
+      "allowed_questions": ["패턴에서 벗어난 대상이 있는가?"],
+      "blocked_claims": ["부정·오류 확정", "책임 귀속"],
+      "recommended_charts": ["scatter", "table"]
+    },
+    {
+      "id": "dimensionality_reduction_candidate",
+      "route": "ml_exploratory",
+      "label": "차원 축소 후보 탐색",
+      "requires": {
+        "data_conditions": ["multiple_numeric_features", "sample_size_check"],
+        "domain_conditions": ["feature_semantics_confirmed"]
+      },
+      "dependency_groups": ["ml"],
+      "allowed_questions": ["여러 지표를 요약하는 축이 있는가?"],
+      "blocked_claims": ["축 의미 확정", "지표 대체 확정"],
+      "recommended_charts": ["scatter"]
+    }
+  ]
+}

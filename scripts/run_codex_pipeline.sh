@@ -5,7 +5,7 @@
 # 단일 원천: docs/pipeline-contract.md.
 #
 # 사용법:
-#   bash scripts/run_codex_pipeline.sh <run-id> [--dry-run] [--fresh] [--guided-intake] [--guided|--auto]
+#   bash scripts/run_codex_pipeline.sh <run-id> [--dry-run] [--fresh] [--domain-mode] [--guided-intake] [--guided|--auto]
 #   DIK_MODEL 환경변수로 모델 override (기본 gpt-5.5). 기존 VK_MODEL도 호환.
 set -euo pipefail
 
@@ -14,11 +14,13 @@ cd "$ROOT"
 
 usage() {
   cat <<'EOF'
-usage: bash scripts/run_codex_pipeline.sh [run-id] [--dry-run] [--fresh] [--guided-intake] [--guided|--auto]
+usage: bash scripts/run_codex_pipeline.sh [run-id] [--dry-run] [--fresh] [--domain-mode] [--guided-intake] [--guided|--auto]
 
 Options:
   --dry-run                 Print commands without running stages.
   --fresh                   Ignore cached stage artifacts.
+  --domain-mode             Mark this run as domain mode (stamped into input/run_context.json;
+                            sticky across resumes, so later invocations may omit the flag).
   --guided-intake           Force the first intake pass through intake_draft.yaml.
   --force-intake-interview  Alias for --guided-intake.
   --guided                  Keep human checkpoints between explore/frame/analyze/visualize (default).
@@ -27,11 +29,12 @@ EOF
 }
 
 RUN_ID=""
-DRY=0; FRESH=0; FORCE_GUIDED_INTAKE=0; CHECKPOINTS=1
+DRY=0; FRESH=0; FORCE_GUIDED_INTAKE=0; CHECKPOINTS=1; DOMAIN_MODE=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --fresh) FRESH=1 ;;
+    --domain-mode) DOMAIN_MODE=1 ;;
     --guided-intake|--force-intake-interview) FORCE_GUIDED_INTAKE=1 ;;
     --guided) CHECKPOINTS=1 ;;
     --auto|--no-checkpoints) CHECKPOINTS=0 ;;
@@ -69,12 +72,28 @@ artifacts_for() {
     intake) echo "$RUN/manifest.json" ;;
     connect) echo "$RUN/outputs/01_profile.md" ;;
     explore) echo "$RUN/outputs/02_eda.md" ;;
-    frame) echo "$RUN/outputs/03_frame.md" ;;
+    frame) echo "$RUN/outputs/03_frame.md $RUN/outputs/method_route.json" ;;
     analyze) echo "$RUN/outputs/04_analysis.md $RUN/outputs/chart_spec.json" ;;
     visualize) echo "$RUN/outputs/dashboard_data.json" ;;
     communicate) echo "$RUN/outputs/summary_report.md" ;;
     *) echo "" ;;
   esac
+}
+
+dashboard_contract() {
+  python3 - "$RUN/outputs/chart_spec.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    print("legacy")
+else:
+    print((data.get("dashboard_design") or {}).get("contract_version") or "legacy")
+PY
 }
 
 print_intake_question() {
@@ -377,8 +396,8 @@ user_analysis_brief = {
             "recommended": True,
         },
         {
-            "label": "현황·리스크 진단",
-            "description": "성과, 집중도, 이상치, 위험 요인을 찾아 개선 포인트를 봅니다.",
+            "label": "분포·집중도 진단",
+            "description": "현재 구조, 집중 구간, 예외적으로 두드러지는 대상을 확인합니다.",
         },
         {
             "label": "데이터 탐색",
@@ -410,10 +429,10 @@ user_analysis_brief = {
         },
         {
             "label": "목적을 다시 정하기",
-            "description": "현황 진단, 위험 점검, 단순 탐색 중 다른 방향을 고릅니다.",
+            "description": "우선순위 판단, 구조 진단, 단순 탐색 중 다른 방향을 고릅니다.",
         },
     ],
-    "approval_question": "먼저 이번 분석 결과로 무엇을 판단할지 선택해도 될까요?",
+    "approval_question": "추천 방향으로 데이터 확인 단계부터 시작할까요, 아니면 목적·범위를 바꿀까요?",
 }
 decision_options = [
     {
@@ -425,8 +444,8 @@ decision_options = [
     },
     {
         "id": "diagnosis",
-        "label": "현황·리스크 진단",
-        "description": "성과, 집중도, 이상치, 위험 요인을 찾아 개선 포인트를 정한다.",
+        "label": "분포·집중도 진단",
+        "description": "현재 구조, 집중 구간, 예외적으로 두드러지는 대상을 확인한다.",
         "maps_to": {"analysis_mode": "status_diagnosis"},
     },
     {
@@ -436,7 +455,7 @@ decision_options = [
         "maps_to": {"analysis_mode": "segment_discovery"},
     },
 ]
-decision_question = "이번 분석 결과로 무엇을 판단하려고 하시나요?"
+decision_question = "이번 분석에서 가장 먼저 확인할 관점은 무엇인가요?"
 question = {
     "schema_version": "data-insight-kit.intake_question.v1",
     "run_id": run_id,
@@ -629,6 +648,145 @@ prepare_primary_api_source() {
   python3 scripts/prepare_primary_api_source.py "$RUN_ID" --user-request "$USER_REQUEST"
 }
 
+write_run_context_policy() {
+  if [ "$DRY" -eq 1 ]; then
+    echo "    run-context: 새 run은 기본적으로 기존 runs/* 산출물 참조 금지 정책 기록 예정"
+    if [ "$DOMAIN_MODE" -eq 1 ]; then
+      echo "    run-context: --domain-mode 스탬프(domain_mode: true) 기록 예정"
+    fi
+    return 0
+  fi
+  python3 - "$RUN_ID" "$RUN" "$USER_REQUEST" "$DOMAIN_MODE" <<'PY'
+import json
+import pathlib
+import re
+import sys
+from datetime import datetime, timezone
+
+run_id, run, user_request, domain_flag = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3], sys.argv[4]
+text = user_request or ""
+lower = text.lower()
+
+negative_patterns = (
+    r"참고하지\s*(?:않|말)",
+    r"참조하지\s*(?:않|말)",
+    r"재사용하지\s*(?:않|말)",
+    r"사용하지\s*(?:않|말)",
+    r"복사하지\s*(?:않|말)",
+    r"비교하지\s*(?:않|말)",
+    r"기존\s*run.*쓰지\s*말",
+    r"기존.*입력으로\s*쓰지\s*말",
+    r"새\s*분석",
+    r"새로\s*시작",
+    r"새롭게\s*시작",
+    r"처음부터",
+    r"fresh",
+)
+positive_patterns = (
+    r"기존.*참고",
+    r"기존.*참조",
+    r"이전.*참고",
+    r"이전.*참조",
+    r"지난.*참고",
+    r"지난.*참조",
+    r"기존.*수정",
+    r"이전.*수정",
+    r"기존.*비교",
+    r"이전.*비교",
+    r"지난.*비교",
+    r"기존.*재사용",
+    r"이전.*재사용",
+    r"이어\s*서",
+    r"이어받",
+    r"resume",
+    r"reference",
+    r"compare",
+    r"revise",
+)
+
+explicit_fresh = any(re.search(pattern, lower) for pattern in negative_patterns)
+explicit_prior = (not explicit_fresh) and any(re.search(pattern, lower) for pattern in positive_patterns)
+mode = "fresh_analysis"
+if explicit_prior:
+    mode = "compare_with_previous" if any(term in lower for term in ("비교", "compare")) else "revise_previous"
+
+# domain_mode는 sticky: 이 파일은 wrapper 재실행마다 재작성되므로,
+# 플래그가 빠진 resume에서도 기존 스탬프를 유지해야 한다.
+existing_context = {}
+context_path = run / "input" / "run_context.json"
+if context_path.exists():
+    try:
+        existing_context = json.loads(context_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        existing_context = {}
+domain_mode = domain_flag == "1" or existing_context.get("domain_mode") is True
+
+policy = {
+    "schema_version": "data-insight-kit.run_context.v1",
+    "run_id": run_id,
+    "created_at": datetime.now(timezone.utc).isoformat(),
+    "mode": mode,
+    "domain_mode": domain_mode,
+    "allow_prior_run_reference": bool(explicit_prior),
+    "reference_runs": [],
+    "user_request_indicates_prior_reference": bool(explicit_prior),
+    "default_reason": (
+        "new analysis is fresh-by-default; prior run outputs require explicit user request"
+        if not explicit_prior
+        else "user request explicitly asked to reference, compare, resume, or revise prior analysis"
+    ),
+    "rules": [
+        "do_not_use_prior_runs_as_inputs_unless_allow_prior_run_reference_true",
+        "do_not_copy_prior_dashboard_data_chart_spec_or_reports_into_fresh_run",
+        "use_original_source_or_run_input_snapshot_for_fresh_analysis",
+        "record_reference_runs_when_prior_outputs_are_intentionally_used",
+    ],
+}
+input_dir = run / "input"
+input_dir.mkdir(parents=True, exist_ok=True)
+(input_dir / "run_context.json").write_text(json.dumps(policy, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
+write_checkpoint_policy() {
+  if [ "$DRY" -eq 1 ]; then
+    if [ "$CHECKPOINTS" -eq 0 ]; then
+      echo "    checkpoint-policy: --auto/--no-checkpoints 명시 예외 기록 예정"
+    else
+      echo "    checkpoint-policy: guided human checkpoint 정책 기록 예정"
+    fi
+    return 0
+  fi
+  python3 - "$RUN_ID" "$RUN" "$CHECKPOINTS" "$FORCE_GUIDED_INTAKE" <<'PY'
+import json
+import pathlib
+import sys
+from datetime import datetime, timezone
+
+run_id, run, checkpoints, guided_intake = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3], sys.argv[4]
+input_dir = run / "input"
+input_dir.mkdir(parents=True, exist_ok=True)
+human_checkpoints_enabled = checkpoints == "1"
+policy = {
+    "schema_version": "data-insight-kit.checkpoint_policy.v1",
+    "run_id": run_id,
+    "created_at": datetime.now(timezone.utc).isoformat(),
+    "mode": "guided" if human_checkpoints_enabled else "auto",
+    "human_checkpoints_enabled": human_checkpoints_enabled,
+    "guided_intake_requested": guided_intake == "1",
+    "explicit_skip": not human_checkpoints_enabled,
+    "skip_reason": None if human_checkpoints_enabled else "wrapper invoked with --auto or --no-checkpoints",
+    "required_checkpoints": [] if not human_checkpoints_enabled else [
+        "data_profile",
+        "analysis_strategy",
+        "dashboard_storyboard",
+        "report_outline",
+    ],
+}
+(input_dir / "checkpoint_policy.json").write_text(json.dumps(policy, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
 prepare_primary_api_source
 
 # 소스 확인
@@ -639,10 +797,14 @@ if [ ! -f connectors/.env ] && [ -z "$(ls -A "$RUN/input" 2>/dev/null)" ]; then
     else
       echo "소스 없음: API URL은 감지했지만 source_api_manifest.json을 만들지 못했습니다."; exit 2
     fi
+  elif [ "$DRY" -eq 1 ]; then
+    echo "    source preflight: 입력 없는 설치 확인 dry-run — 실제 실행 전 input 또는 connector 필요"
   else
     echo "소스 없음: $RUN/input/ 에 CSV·Parquet·Excel·JSON, 축약 스냅샷 또는 source_api_manifest.json을 두세요. DuckDB 사용자는 connectors/.env(DIK_DUCKDB_PATH)를 설정하세요."; exit 2
   fi
 fi
+write_run_context_policy
+write_checkpoint_policy
 
 run_stage() {
   local stage="$1" effort; effort="$(effort_for "$stage")"
@@ -652,6 +814,9 @@ run_stage() {
     for art in $arts; do
       [ -f "$art" ] || all_cached=0
     done
+    if [ "$stage" = "analyze" ] && [ "$(dashboard_contract)" = "v5" ]; then
+      [ -f "$RUN/outputs/dashboard_layout.json" ] || all_cached=0
+    fi
     if [ "$all_cached" -eq 1 ]; then
       echo "✅ $stage (cached: $arts)"; return 0
     fi
@@ -705,11 +870,23 @@ $domain_pack_block
 $RUN/input/checkpoint_answers.json 을 반드시 읽고, 승인된 checkpoint 답변의 지시와 free-text를 다음 산출물에 반영하라. continue_pipeline=false 로 남은 최신 답변이 있으면 새 산출물을 만들기 전에 그 수정 요구를 해결해야 한다.
 "
   fi
+  local run_context_block=""
+  if [ -f "$RUN/input/run_context.json" ]; then
+    run_context_block="
+[run context / prior-run reference policy]
+$RUN/input/run_context.json 을 반드시 읽어라.
+- 기본 mode=fresh_analysis 에서는 기존 runs/* 산출물, 이전 dashboard_data.json, 이전 chart_spec.json, 이전 보고서를 입력·근거·문구로 참조하거나 복사하지 않는다.
+- prior run을 참고하려면 allow_prior_run_reference=true 와 reference_runs[]가 있어야 한다.
+- allow_prior_run_reference=true 이지만 reference_runs[]가 비어 있으면 기존 run을 임의 선택하지 말고 사용자에게 어떤 run을 참고할지 묻거나, 참조 없이 새 분석으로 진행한다.
+- 새 스레드/새 run에서 같은 데이터를 다시 분석하는 경우에도 원천 데이터나 이번 run input snapshot부터 다시 확인한다.
+"
+  fi
   local prompt="run-id: $RUN_ID
 산출 경로: $RUN/
 단일 원천 docs/pipeline-contract.md 의 [$stage] 계약을 준수하라.
 DB 접근은 connectors/source.py 경유(read-only). 쓰기는 $RUN/ 안에만.
 $request_block
+$run_context_block
 $guided_block
 $primary_api_block
 $adapter_policy_block
@@ -719,6 +896,9 @@ $checkpoint_block
 [단계 사양: agents/$stage.md]
 $body"
   echo "▶ $stage (effort=$effort, model=$MODEL)"
+  if [ "$DRY" -ne 1 ]; then
+    python3 scripts/stage_guard.py "$RUN_ID" "$stage"
+  fi
   if [ "$DRY" -eq 1 ]; then
     echo "    codex exec -C \"$ROOT\" -m $MODEL -c 'model_reasoning_effort=\"$effort\"' --sandbox workspace-write <prompt:$stage>"
     return 0
@@ -730,6 +910,24 @@ $body"
       if [ ! -f "$art" ]; then echo "✗ $stage 산출물 없음($art) — 중단"; exit 1; fi
     done
   fi
+  if [ "$stage" = "analyze" ] && [ "$(dashboard_contract)" = "v5" ] \
+    && [ ! -f "$RUN/outputs/dashboard_layout.json" ]; then
+    echo "✗ analyze v5 산출물 없음($RUN/outputs/dashboard_layout.json) — 중단"
+    exit 1
+  fi
+}
+
+compile_v5_dashboard() {
+  if [ "$DRY" -eq 1 ]; then
+    echo "    v5일 때: python3 scripts/render_dashboard_v5.py --chart-spec \"$RUN/outputs/chart_spec.json\" --layout \"$RUN/outputs/dashboard_layout.json\" --data \"$RUN/outputs/dashboard_data.json\" --output \"$RUN/outputs/dashboard.html\""
+    return 0
+  fi
+  [ "$(dashboard_contract)" = "v5" ] || return 0
+  python3 scripts/render_dashboard_v5.py \
+    --chart-spec "$RUN/outputs/chart_spec.json" \
+    --layout "$RUN/outputs/dashboard_layout.json" \
+    --data "$RUN/outputs/dashboard_data.json" \
+    --output "$RUN/outputs/dashboard.html"
 }
 
 run_checkpoint() {
@@ -744,7 +942,7 @@ run_checkpoint() {
     return 0
   fi
   set +e
-  python3 scripts/checkpoint_gate.py "$RUN_ID" "$checkpoint"
+  python3 scripts/checkpoint_gate.py "$RUN_ID" "$checkpoint" --quiet
   local status=$?
   set -e
   if [ "$status" -eq 0 ]; then
@@ -757,6 +955,7 @@ run_checkpoint() {
       analysis_strategy) base="02_analysis_strategy_question" ;;
       dashboard_storyboard) base="03_dashboard_storyboard_question" ;;
       report_outline) base="04_report_outline_question" ;;
+      analysis_result_review) base="05_analysis_result_review_question" ;;
     esac
     if [ -n "$base" ]; then
       local files=()
@@ -766,6 +965,7 @@ run_checkpoint() {
         python3 scripts/validate_user_facing_text.py "${files[@]}"
       fi
     fi
+    python3 scripts/checkpoint_gate.py "$RUN_ID" "$checkpoint" --print-existing
     exit 3
   fi
   if [ "$status" -eq 4 ]; then
@@ -774,6 +974,76 @@ run_checkpoint() {
   fi
   echo "✗ checkpoint 실패(status=$status): $checkpoint"
   exit "$status"
+}
+
+run_dependency_preflight() {
+  if [ "$DRY" -eq 1 ]; then
+    echo "    dependency preflight: method_route.json 기준으로 dependency_plan.json 준비 예정"
+    return 0
+  fi
+  set +e
+  python3 scripts/dependency_preflight.py "$RUN_ID"
+  local status=$?
+  set -e
+  if [ "$status" -ne 0 ]; then
+    echo "✗ dependency preflight 실패(status=$status)"
+    exit 1
+  fi
+}
+
+run_dependency_apply_approval() {
+  if [ "$DRY" -eq 1 ]; then
+    echo "    dependency apply-approval: 승인된 analysis_strategy 답변의 dependency_decision에 따라 설치/강등 처리 예정"
+    return 0
+  fi
+  # auto/--no-checkpoints 에서는 읽을 사람 답변이 없다. apply-approval을 건너뛴다.
+  if [ "$CHECKPOINTS" -eq 0 ]; then
+    return 0
+  fi
+  set +e
+  python3 scripts/dependency_preflight.py "$RUN_ID" --apply-approval
+  local status=$?
+  set -e
+  if [ "$status" -ne 0 ]; then
+    echo "✗ dependency apply-approval 실패(status=$status)"
+    exit 1
+  fi
+}
+
+# spec §9 결정적 술어를 stage_guard가 재계산한다 (read-only, dry-run에서도 실제 계산).
+# stdout: required|not_required, stderr: 충족 조건 상세.
+review_required() {
+  python3 - "$RUN_ID" <<'PY'
+import sys
+sys.path.insert(0, "scripts")
+from pathlib import Path
+import stage_guard
+required, matched = stage_guard.review_predicate_required(Path("runs") / sys.argv[1])
+print("required" if required else "not_required")
+if matched:
+    print("matched: " + ", ".join(matched), file=sys.stderr)
+PY
+}
+
+# H2.5 조건부 analysis_result_review. analyze 직후 dashboard_storyboard 앞에서만 호출.
+run_conditional_result_review() {
+  local verdict
+  verdict="$(review_required)"
+  if [ "$DRY" -eq 1 ]; then
+    if [ "$verdict" = "required" ]; then
+      echo "    analysis_result_review 조건부 게이트: 발동 예정 (결정적 술어 참)"
+      python3 scripts/checkpoint_gate.py "$RUN_ID" analysis_result_review --dry-run
+    else
+      echo "    analysis_result_review 조건부 게이트: 미발동 (결정적 술어 거짓)"
+    fi
+    return 0
+  fi
+  if [ "$verdict" = "required" ]; then
+    echo "▶ analysis_result_review 조건부 게이트 발동 (결정적 술어 참)"
+    run_checkpoint analysis_result_review
+  else
+    echo "⏭ analysis_result_review 미발동 (결정적 술어 거짓)"
+  fi
 }
 
 # 0~5단계 (intake~visualize)
@@ -791,17 +1061,28 @@ run_stage connect
 run_stage explore
 run_checkpoint data_profile
 run_stage frame
+run_dependency_preflight
 run_checkpoint analysis_strategy
+run_dependency_apply_approval
 run_stage analyze
+run_conditional_result_review
 run_checkpoint dashboard_storyboard
 run_stage visualize
+compile_v5_dashboard
 
 # 6단계 qa = 결정적 게이트 (validate.py)
 echo "▶ qa (결정적 게이트)"
 if [ "$DRY" -eq 1 ]; then
-  echo "    python qa/validate.py $RUN/outputs/dashboard_data.json --chart-spec $RUN/outputs/chart_spec.json"
+  echo "    legacy/v4: python qa/validate.py $RUN/outputs/dashboard_data.json --chart-spec $RUN/outputs/chart_spec.json"
+  echo "    v5: python qa/validate.py $RUN/outputs/dashboard_data.json --chart-spec $RUN/outputs/chart_spec.json --layout $RUN/outputs/dashboard_layout.json"
 else
-  if ! python3 qa/validate.py "$RUN/outputs/dashboard_data.json" --chart-spec "$RUN/outputs/chart_spec.json"; then
+  python3 scripts/stage_guard.py "$RUN_ID" qa
+  qa_layout_args=()
+  if [ "$(dashboard_contract)" = "v5" ]; then
+    qa_layout_args=(--layout "$RUN/outputs/dashboard_layout.json")
+  fi
+  if ! python3 qa/validate.py "$RUN/outputs/dashboard_data.json" \
+    --chart-spec "$RUN/outputs/chart_spec.json" "${qa_layout_args[@]}"; then
     echo "✗ QA BLOCK — 출고 차단. visualize 재검토 후 재실행(계약: 기계적 결함 1회 자동수정)."; exit 1
   fi
 fi

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/exploration_candidates.schema.json",
+  "title": "data-insight-kit exploration candidates",
+  "description": "explore 에이전트가 사전 계산하는 탐색 방향 후보 (interview-loop-v2 spec §6.1). gate는 계산하지 않고 이 파일을 렌더만 한다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "candidates"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "data-insight-kit.exploration_candidates.v1",
+        "visualize-kit.exploration_candidates.v1"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "why_interesting",
+          "mini_result",
+          "maps_to"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96,
+            "description": "사용자 표현 (내부 용어 금지, v1 spec §11)."
+          },
+          "why_interesting": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mini_result": {
+            "type": "object",
+            "required": [
+              "summary",
+              "table_path",
+              "computation",
+              "source_columns",
+              "row_count_used"
+            ],
+            "properties": {
+              "summary": {
+                "type": "string",
+                "minLength": 1,
+                "description": "옵션 description에 들어가는 1줄 요약. 계산 결과 서술만, 원인·추천 단정 금지."
+              },
+              "table_path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "outputs/exploration/ 아래 미니 결과 표(≤10행) md 경로."
+              },
+              "computation": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_columns": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "row_count_used": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "maps_to": {
+            "type": "object",
+            "required": [
+              "frame_focus"
+            ],
+            "properties": {
+              "frame_focus": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

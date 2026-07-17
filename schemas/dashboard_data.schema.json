@@ -4,229 +4,822 @@
   "title": "dashboard_data",
   "description": "분석 → 렌더 → v2 Python 재현을 잇는 단일 계약. 데이터 파일명: dashboard_data.json. v0.2(Codex 교차검증 반영).",
   "type": "object",
-  "required": ["meta", "sources", "kpis", "panels"],
+  "required": [
+    "meta",
+    "sources",
+    "kpis",
+    "panels"
+  ],
   "additionalProperties": false,
   "properties": {
-    "meta": { "$ref": "#/$defs/meta" },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
     "sources": {
       "type": "array",
       "minItems": 1,
       "description": "다중 데이터셋 조인 lineage 표현을 위해 배열. metric.source_ref가 여기 id를 참조.",
-      "items": { "$ref": "#/$defs/source" }
+      "items": {
+        "$ref": "#/$defs/source"
+      }
     },
-    "kpis": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/kpi" } },
-    "panels": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/panel" } },
+    "kpis": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/kpi"
+      }
+    },
+    "panels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/panel"
+      }
+    },
     "assertions": {
       "type": "array",
       "description": "선택적 QA override만. 표준 QA 검사는 검증 스크립트(코드)에 둠 — 규칙을 데이터마다 복제하지 않음.",
-      "items": { "$ref": "#/$defs/assertion" }
+      "items": {
+        "$ref": "#/$defs/assertion"
+      }
     }
   },
-
   "$defs": {
     "colorRole": {
       "description": "색은 의미(role)로만. 실제 hex는 테마(다크/라이트)가 매핑. cat1~cat8은 의미가 아닌 범주 구분용 보조 팔레트.",
-      "enum": ["good", "bad", "warn", "neutral", "info", "cat1", "cat2", "cat3", "cat4", "cat5", "cat6", "cat7", "cat8"]
+      "enum": [
+        "good",
+        "bad",
+        "warn",
+        "neutral",
+        "info",
+        "cat1",
+        "cat2",
+        "cat3",
+        "cat4",
+        "cat5",
+        "cat6",
+        "cat7",
+        "cat8"
+      ]
     },
-    "status": { "enum": ["good", "bad", "warn", "neutral"] },
-
+    "status": {
+      "enum": [
+        "good",
+        "bad",
+        "warn",
+        "neutral"
+      ]
+    },
     "metricRef": {
       "description": "v2 Python 재현 시드. 이 숫자가 어떤 소스에서 어떤 변환으로 나왔는지.",
       "type": "object",
-      "required": ["source_ref", "aggregation"],
+      "required": [
+        "source_ref",
+        "aggregation"
+      ],
       "additionalProperties": false,
       "properties": {
-        "source_ref": { "type": "string", "description": "sources[].id 참조." },
-        "transform": { "type": ["string", "null"], "description": "계산 요약(SQL 또는 서술). 재현 단서." },
-        "aggregation": { "enum": ["sum", "avg", "count", "median", "min", "max", "ratio", "none"] }
+        "source_ref": {
+          "type": "string",
+          "description": "sources[].id 참조."
+        },
+        "transform": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "계산 요약(SQL 또는 서술). 재현 단서."
+        },
+        "aggregation": {
+          "enum": [
+            "sum",
+            "avg",
+            "count",
+            "median",
+            "min",
+            "max",
+            "ratio",
+            "none"
+          ]
+        }
       }
     },
-
     "format": {
       "description": "기계 포맷팅. unit은 사람용 라벨, format은 렌더·재현용 수치 규칙.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "currency": { "type": ["string", "null"], "description": "통화 코드(예: KRW). 통화 아니면 null." },
-        "display_scale": { "type": "number", "default": 1, "description": "value가 원본을 이 배율로 나눈 표시값임을 문서화(v2 재현용). 렌더러는 재나눗셈 안 함 — value가 표시값." },
-        "precision": { "type": "integer", "minimum": 0, "default": 1, "description": "소수 자릿수." },
-        "percent": { "type": "boolean", "default": false }
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "통화 코드(예: KRW). 통화 아니면 null."
+        },
+        "display_scale": {
+          "type": "number",
+          "default": 1,
+          "description": "value가 원본을 이 배율로 나눈 표시값임을 문서화(v2 재현용). 렌더러는 재나눗셈 안 함 — value가 표시값."
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "소수 자릿수."
+        },
+        "percent": {
+          "type": "boolean",
+          "default": false
+        }
       }
     },
-
     "meta": {
       "type": "object",
-      "required": ["title", "domain", "audience", "mode", "generated_at", "language"],
+      "required": [
+        "title",
+        "domain",
+        "audience",
+        "mode",
+        "generated_at",
+        "language"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": { "type": "string" },
-        "domain": { "type": "string", "description": "추론된 도메인. 하드코딩 금지." },
-        "audience": { "enum": ["executive", "analyst", "operator", "mixed"] },
-        "mode": { "enum": ["directed", "exploratory"] },
-        "period": { "type": ["string", "null"] },
-        "row_count": { "type": ["integer", "null"], "minimum": 0 },
-        "generated_at": { "type": "string", "format": "date-time" },
-        "language": { "type": "string", "default": "ko" },
-        "locale": { "type": "string", "default": "ko-KR", "description": "정렬/콜레이션 기준." }
+        "title": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string",
+          "description": "추론된 도메인. 하드코딩 금지."
+        },
+        "audience": {
+          "enum": [
+            "executive",
+            "analyst",
+            "operator",
+            "mixed"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "directed",
+            "exploratory"
+          ]
+        },
+        "period": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "row_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "language": {
+          "type": "string",
+          "default": "ko"
+        },
+        "locale": {
+          "type": "string",
+          "default": "ko-KR",
+          "description": "정렬/콜레이션 기준."
+        },
+        "dashboard_profile": {
+          "enum": [
+            "executive_brief",
+            "analyst_workspace",
+            "operations_monitor"
+          ],
+          "default": "executive_brief",
+          "description": "렌더러가 사용할 대시보드 디자인 profile. 없으면 renderer가 executive_brief로 fallback."
+        },
+        "dashboard_profile_contract": {
+          "enum": [
+            "v4",
+            "v5"
+          ],
+          "description": "명시적 renderer 계약. v4는 프로필 레이아웃 opt-in, v5는 승인된 dashboard_layout.json+compiler 경로. 없으면 legacy 탭 렌더 유지."
+        }
       }
     },
-
     "source": {
       "type": "object",
-      "required": ["id", "type", "ref", "snapshot_at", "sample_policy"],
+      "required": [
+        "id",
+        "type",
+        "ref",
+        "snapshot_at",
+        "sample_policy"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "type": { "enum": ["file", "duckdb", "postgres", "sqlite", "join"] },
-        "ref": { "type": "string" },
-        "query": { "type": ["string", "null"] },
-        "checksum": { "type": ["string", "null"], "description": "파일 freshness용. DB면 null." },
-        "snapshot_at": { "type": "string", "format": "date-time", "description": "읽기/쿼리 실행 시점 = freshness 기준." },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "file",
+            "duckdb",
+            "postgres",
+            "sqlite",
+            "join"
+          ]
+        },
+        "ref": {
+          "type": "string"
+        },
+        "query": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checksum": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "파일 freshness용. DB면 null."
+        },
+        "snapshot_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "읽기/쿼리 실행 시점 = freshness 기준."
+        },
         "sample_policy": {
           "type": "object",
-          "required": ["sampled", "n"],
+          "required": [
+            "sampled",
+            "n"
+          ],
           "additionalProperties": false,
           "properties": {
-            "sampled": { "type": "boolean" },
-            "method": { "type": ["string", "null"] },
-            "n": { "type": "integer", "minimum": 0 }
+            "sampled": {
+              "type": "boolean"
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }
     },
-
     "kpi": {
       "type": "object",
-      "required": ["id", "label", "value", "unit", "kind", "status"],
+      "required": [
+        "id",
+        "label",
+        "value",
+        "unit",
+        "kind",
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string", "description": "결론형/질문형 권장." },
-        "value": { "type": ["number", "string"] },
-        "unit": { "type": "string", "minLength": 1, "description": "단위 필수, 빈 문자열 금지." },
-        "kind": { "enum": ["absolute", "relative"], "description": "절대/상대 구분(혼용 방지)." },
-        "denominator": { "type": ["string", "null"], "description": "kind=relative면 필수." },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "description": "결론형/질문형 권장."
+        },
+        "value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "단위 필수, 빈 문자열 금지."
+        },
+        "kind": {
+          "enum": [
+            "absolute",
+            "relative"
+          ],
+          "description": "절대/상대 구분(혼용 방지)."
+        },
+        "denominator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "kind=relative면 필수."
+        },
         "comparison": {
-          "type": ["object", "null"],
+          "type": [
+            "object",
+            "null"
+          ],
           "additionalProperties": false,
           "properties": {
-            "basis": { "type": "string" },
-            "delta": { "type": "number" },
-            "direction": { "enum": ["up", "down", "flat"] }
+            "basis": {
+              "type": "string"
+            },
+            "delta": {
+              "type": "number"
+            },
+            "direction": {
+              "enum": [
+                "up",
+                "down",
+                "flat"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "period_delta",
+                "benchmark"
+              ],
+              "description": "없으면 benchmark로 간주 (기존 run 의미 보존). 델타 렌더는 period_delta만."
+            },
+            "provenance": {
+              "$ref": "#/$defs/timeProvenance"
+            }
           }
         },
-        "status": { "$ref": "#/$defs/status" },
-        "note": { "type": ["string", "null"] },
-        "metric": { "$ref": "#/$defs/metricRef" },
-        "format": { "$ref": "#/$defs/format" }
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metric": {
+          "$ref": "#/$defs/metricRef"
+        },
+        "format": {
+          "$ref": "#/$defs/format"
+        },
+        "trend": {
+          "description": "KPI 스파크라인 (v4 E1). 있으면 value=number, format.precision 필수 (allOf 조건).",
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "points",
+            "provenance"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "points": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 24,
+              "items": {
+                "type": "number"
+              }
+            },
+            "period_label": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "사용자 표현 캡션 — 언어 게이트 수집 대상"
+            },
+            "provenance": {
+              "$ref": "#/$defs/timeProvenance"
+            }
+          }
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "kind": { "const": "relative" } } },
-          "then": { "properties": { "denominator": { "type": "string" } }, "required": ["denominator"] }
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "relative"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "denominator": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "denominator"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "trend"
+            ],
+            "properties": {
+              "trend": {
+                "type": "object"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "format": {
+                "type": "object",
+                "required": [
+                  "precision"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "comparison"
+            ],
+            "properties": {
+              "comparison": {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "period_delta"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "comparison": {
+                "required": [
+                  "basis",
+                  "delta",
+                  "direction",
+                  "provenance"
+                ],
+                "properties": {
+                  "basis": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "provenance": {
+                    "allOf": [
+                      {
+                        "$ref": "#/$defs/timeProvenance"
+                      }
+                    ],
+                    "properties": {
+                      "periods": {
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     },
-
     "panel": {
       "type": "object",
-      "required": ["id", "title", "charts"],
+      "required": [
+        "id",
+        "title",
+        "charts"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "method": { "type": ["string", "null"] },
-        "story": { "$ref": "#/$defs/story" },
-        "charts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/chart" } },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "story": {
+          "$ref": "#/$defs/story"
+        },
+        "charts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/chart"
+          }
+        },
         "simulators": {
           "type": "array",
           "description": "분석 근거 있을 때만(빈 위젯 양산 방지).",
-          "items": { "$ref": "#/$defs/simulator" }
+          "items": {
+            "$ref": "#/$defs/simulator"
+          }
         },
-        "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } },
-        "table": { "$ref": "#/$defs/table" }
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "table": {
+          "$ref": "#/$defs/table"
+        },
+        "surface": {
+          "enum": [
+            "primary",
+            "detail",
+            "appendix"
+          ],
+          "description": "v4 계약(contract=v4)에서 첫 화면(primary)/강등 영역 배치. 없으면 primary."
+        }
       }
     },
-
     "story": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
-      "required": ["now", "why", "so", "act"],
+      "required": [
+        "now",
+        "why",
+        "so",
+        "act"
+      ],
       "properties": {
-        "now": { "$ref": "#/$defs/storyCell" },
-        "why": { "$ref": "#/$defs/storyCell" },
-        "so": { "$ref": "#/$defs/storyCell" },
-        "act": { "$ref": "#/$defs/storyCell" }
+        "now": {
+          "$ref": "#/$defs/storyCell"
+        },
+        "why": {
+          "$ref": "#/$defs/storyCell"
+        },
+        "so": {
+          "$ref": "#/$defs/storyCell"
+        },
+        "act": {
+          "$ref": "#/$defs/storyCell"
+        }
       }
     },
     "storyCell": {
       "type": "object",
-      "required": ["value", "desc"],
+      "required": [
+        "value",
+        "desc"
+      ],
       "additionalProperties": false,
       "properties": {
-        "value": { "type": "string" },
-        "desc": { "type": "string" }
+        "value": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        }
       }
     },
-
     "chart": {
       "type": "object",
-      "required": ["id", "type", "title", "encoding"],
+      "required": [
+        "id",
+        "type",
+        "title",
+        "encoding"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "type": { "enum": ["line", "area", "bar", "stacked_bar", "histogram", "scatter", "heatmap", "boxplot", "waterfall", "slope"] },
-        "title": { "type": "string" },
-        "desc": { "type": ["string", "null"] },
-        "encoding": { "type": "object" }
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "line",
+            "area",
+            "bar",
+            "stacked_bar",
+            "histogram",
+            "scatter",
+            "heatmap",
+            "boxplot",
+            "waterfall",
+            "slope"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "desc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "encoding": {
+          "type": "object"
+        },
+        "small_multiple_group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "같은 panel 내 2~9개 chart를 스몰 멀티플 그리드로 묶는 키 (v4 E4)."
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "type": { "enum": ["line", "area", "bar", "stacked_bar"] } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingCategory" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "line",
+                  "area",
+                  "bar",
+                  "stacked_bar"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingCategory"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "histogram" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingHistogram" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "histogram"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingHistogram"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "scatter" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingScatter" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "scatter"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingScatter"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "heatmap" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingHeatmap" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "heatmap"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingHeatmap"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "boxplot" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingBoxplot" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "boxplot"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingBoxplot"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "waterfall" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingWaterfall" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "waterfall"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingWaterfall"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "slope" } } },
-          "then": { "properties": { "encoding": { "$ref": "#/$defs/encodingSlope" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "slope"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "$ref": "#/$defs/encodingSlope"
+              }
+            }
+          }
         }
       ]
     },
-
     "encodingCategory": {
       "description": "line/bar/stacked_bar 공통. 렌더 모호성 제거 필드 포함.",
       "type": "object",
-      "required": ["x", "series", "stack"],
+      "required": [
+        "x",
+        "series",
+        "stack"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["type", "label", "values"],
+          "required": [
+            "type",
+            "label",
+            "values"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "enum": ["category", "time"], "description": "시계열 vs 범주 명시." },
-            "label": { "type": "string" },
-            "values": { "type": "array", "minItems": 1, "items": { "type": ["string", "number"] } },
-            "date_format": { "type": ["string", "null"], "description": "type=time일 때 표시 포맷(예: YYYY-MM)." }
+            "type": {
+              "enum": [
+                "category",
+                "time"
+              ],
+              "description": "시계열 vs 범주 명시."
+            },
+            "label": {
+              "type": "string"
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            },
+            "date_format": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "type=time일 때 표시 포맷(예: YYYY-MM)."
+            }
           }
         },
         "series": {
@@ -234,49 +827,108 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["label", "unit", "values"],
+            "required": [
+              "label",
+              "unit",
+              "values"
+            ],
             "additionalProperties": false,
             "properties": {
-              "label": { "type": "string" },
-              "unit": { "type": "string", "minLength": 1 },
-              "values": { "type": "array", "items": { "type": ["number", "null"] } },
-              "role": { "$ref": "#/$defs/colorRole" },
-              "metric": { "$ref": "#/$defs/metricRef" },
-              "format": { "$ref": "#/$defs/format" }
+              "label": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "point_roles": {
+                "description": "values와 같은 길이의 선택적 role 배열. 단일 계열 안에서 의미 있는 항목만 강조할 때 사용하며 실제 색은 renderer가 매핑.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/colorRole"
+                }
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              },
+              "metric": {
+                "$ref": "#/$defs/metricRef"
+              },
+              "format": {
+                "$ref": "#/$defs/format"
+              }
             }
           }
         },
         "stack": {
-          "enum": ["none", "grouped", "stacked", "stacked_100"],
+          "enum": [
+            "none",
+            "grouped",
+            "stacked",
+            "stacked_100"
+          ],
           "description": "다중 시리즈 배치. line/area=none, bar=none|grouped, stacked_bar=stacked|stacked_100."
         },
         "null_policy": {
-          "enum": ["gap", "interpolate", "zero"],
+          "enum": [
+            "gap",
+            "interpolate",
+            "zero"
+          ],
           "default": "gap",
           "description": "line 결측치 처리."
         },
-        "zero_baseline": { "type": "boolean", "default": true, "description": "y축 0 기준선 여부." }
+        "zero_baseline": {
+          "type": "boolean",
+          "default": true,
+          "description": "y축 0 기준선 여부."
+        }
       }
     },
-
     "encodingHistogram": {
       "description": "미리 계산된 bin + 빈도.",
       "type": "object",
-      "required": ["x", "bins"],
+      "required": [
+        "x",
+        "bins"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "bin_inclusion": {
-          "enum": ["[lo,hi)", "(lo,hi]"],
+          "enum": [
+            "[lo,hi)",
+            "(lo,hi]"
+          ],
           "default": "[lo,hi)",
           "description": "구간 경계 포함 규칙."
         },
@@ -285,41 +937,79 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["range", "count"],
+            "required": [
+              "range",
+              "count"
+            ],
             "additionalProperties": false,
             "properties": {
-              "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
-              "count": { "type": "integer", "minimum": 0 }
+              "range": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         }
       }
     },
-
     "encodingScatter": {
       "description": "산점도. point label/size/tooltip은 v1.5.",
       "type": "object",
-      "required": ["x", "y", "points"],
+      "required": [
+        "x",
+        "y",
+        "points"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "y": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "points": {
@@ -327,51 +1017,108 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["x", "y"],
+            "required": [
+              "x",
+              "y"
+            ],
             "additionalProperties": false,
             "properties": {
-              "x": { "type": "number" },
-              "y": { "type": "number" },
-              "group": { "type": ["string", "null"] },
-              "role": { "$ref": "#/$defs/colorRole" }
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "group": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              }
             }
           }
         }
       }
     },
-
     "encodingHeatmap": {
       "description": "두 범주/시간 축과 수치 강도를 표현하는 heatmap.",
       "type": "object",
-      "required": ["x", "y", "cells"],
+      "required": [
+        "x",
+        "y",
+        "cells"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label", "values"],
+          "required": [
+            "label",
+            "values"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "values": { "type": "array", "minItems": 1, "items": { "type": ["string", "number"] } }
+            "label": {
+              "type": "string"
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            }
           }
         },
         "y": {
           "type": "object",
-          "required": ["label", "values"],
+          "required": [
+            "label",
+            "values"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "values": { "type": "array", "minItems": 1, "items": { "type": ["string", "number"] } }
+            "label": {
+              "type": "string"
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              }
+            }
           }
         },
         "value": {
           "type": "object",
-          "required": ["label", "unit"],
+          "required": [
+            "label",
+            "unit"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "cells": {
@@ -379,41 +1126,81 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["x", "y", "value"],
+            "required": [
+              "x",
+              "y",
+              "value"
+            ],
             "additionalProperties": false,
             "properties": {
-              "x": { "type": ["string", "number"] },
-              "y": { "type": ["string", "number"] },
-              "value": { "type": ["number", "null"] },
-              "role": { "$ref": "#/$defs/colorRole" }
+              "x": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              },
+              "y": {
+                "type": [
+                  "string",
+                  "number"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              }
             }
           }
         }
       }
     },
-
     "encodingBoxplot": {
       "description": "범주별 분포 요약. box 값은 미리 계산한다.",
       "type": "object",
-      "required": ["x", "y", "boxes"],
+      "required": [
+        "x",
+        "y",
+        "boxes"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" }
+            "label": {
+              "type": "string"
+            }
           }
         },
         "y": {
           "type": "object",
-          "required": ["label", "unit"],
+          "required": [
+            "label",
+            "unit"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "boxes": {
@@ -421,43 +1208,90 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["label", "min", "q1", "median", "q3", "max"],
+            "required": [
+              "label",
+              "min",
+              "q1",
+              "median",
+              "q3",
+              "max"
+            ],
             "additionalProperties": false,
             "properties": {
-              "label": { "type": "string" },
-              "min": { "type": "number" },
-              "q1": { "type": "number" },
-              "median": { "type": "number" },
-              "q3": { "type": "number" },
-              "max": { "type": "number" },
-              "role": { "$ref": "#/$defs/colorRole" },
-              "outliers": { "type": "array", "items": { "type": "number" } }
+              "label": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "q1": {
+                "type": "number"
+              },
+              "median": {
+                "type": "number"
+              },
+              "q3": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              },
+              "outliers": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
             }
           }
         }
       }
     },
-
     "encodingWaterfall": {
       "description": "초기값에서 증감 기여를 거쳐 최종값으로 이어지는 waterfall.",
       "type": "object",
-      "required": ["x", "y", "steps"],
+      "required": [
+        "x",
+        "y",
+        "steps"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "additionalProperties": false,
-          "properties": { "label": { "type": "string" } }
+          "properties": {
+            "label": {
+              "type": "string"
+            }
+          }
         },
         "y": {
           "type": "object",
-          "required": ["label", "unit"],
+          "required": [
+            "label",
+            "unit"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "steps": {
@@ -465,43 +1299,85 @@
           "minItems": 2,
           "items": {
             "type": "object",
-            "required": ["label", "value", "kind"],
+            "required": [
+              "label",
+              "value",
+              "kind"
+            ],
             "additionalProperties": false,
             "properties": {
-              "label": { "type": "string" },
-              "value": { "type": "number" },
-              "kind": { "enum": ["start", "increase", "decrease", "total"] },
-              "role": { "$ref": "#/$defs/colorRole" }
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "kind": {
+                "enum": [
+                  "start",
+                  "increase",
+                  "decrease",
+                  "total"
+                ]
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              }
             }
           }
         }
       }
     },
-
     "encodingSlope": {
       "description": "두 시점/상태 사이의 값 변화를 여러 항목에 대해 비교.",
       "type": "object",
-      "required": ["x", "y", "series"],
+      "required": [
+        "x",
+        "y",
+        "series"
+      ],
       "additionalProperties": false,
       "properties": {
         "x": {
           "type": "object",
-          "required": ["label", "start_label", "end_label"],
+          "required": [
+            "label",
+            "start_label",
+            "end_label"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "start_label": { "type": "string" },
-            "end_label": { "type": "string" }
+            "label": {
+              "type": "string"
+            },
+            "start_label": {
+              "type": "string"
+            },
+            "end_label": {
+              "type": "string"
+            }
           }
         },
         "y": {
           "type": "object",
-          "required": ["label", "unit"],
+          "required": [
+            "label",
+            "unit"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": ["string", "null"] },
-            "format": { "$ref": "#/$defs/format" }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            }
           }
         },
         "series": {
@@ -509,53 +1385,113 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["label", "start", "end"],
+            "required": [
+              "label",
+              "start",
+              "end"
+            ],
             "additionalProperties": false,
             "properties": {
-              "label": { "type": "string" },
-              "start": { "type": "number" },
-              "end": { "type": "number" },
-              "role": { "$ref": "#/$defs/colorRole" }
+              "label": {
+                "type": "string"
+              },
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              },
+              "role": {
+                "$ref": "#/$defs/colorRole"
+              }
             }
           }
         }
       }
     },
-
     "simulator": {
       "type": "object",
-      "required": ["id", "title", "inputs", "model", "output"],
+      "required": [
+        "id",
+        "title",
+        "inputs",
+        "model",
+        "output"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
         "inputs": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["id", "label", "min", "max", "default", "step"],
+            "required": [
+              "id",
+              "label",
+              "min",
+              "max",
+              "default",
+              "step"
+            ],
             "additionalProperties": false,
             "properties": {
-              "id": { "type": "string" },
-              "label": { "type": "string" },
-              "unit": { "type": ["string", "null"] },
-              "min": { "type": "number" },
-              "max": { "type": "number" },
-              "default": { "type": "number" },
-              "step": { "type": "number", "exclusiveMinimum": 0 }
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "default": {
+                "type": "number"
+              },
+              "step": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
             }
           }
         },
-        "model": { "$ref": "#/$defs/simModel" },
+        "model": {
+          "$ref": "#/$defs/simModel"
+        },
         "output": {
           "type": "object",
-          "required": ["label", "unit", "id"],
+          "required": [
+            "label",
+            "unit",
+            "id"
+          ],
           "additionalProperties": false,
           "properties": {
-            "label": { "type": "string" },
-            "unit": { "type": "string", "minLength": 1 },
-            "id": { "type": "string", "description": "출력 식별자. DOM 매핑은 렌더러가 담당(HTML 비결합)." }
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "id": {
+              "type": "string",
+              "description": "출력 식별자. DOM 매핑은 렌더러가 담당(HTML 비결합)."
+            }
           }
         },
         "test_cases": {
@@ -563,38 +1499,81 @@
           "description": "죽은 시뮬레이터 탐지용. QA가 inputs→expect 계산 일치 확인. 권장.",
           "items": {
             "type": "object",
-            "required": ["inputs", "expect"],
+            "required": [
+              "inputs",
+              "expect"
+            ],
             "additionalProperties": false,
             "properties": {
-              "inputs": { "type": "object", "description": "{input_id: 값}", "additionalProperties": { "type": "number" } },
-              "expect": { "type": "number" }
+              "inputs": {
+                "type": "object",
+                "description": "{input_id: 값}",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "expect": {
+                "type": "number"
+              }
             }
           }
         }
       }
     },
-
     "simModel": {
       "description": "명명된 모델 타입만(eval 금지). JS·Python 동일 해석 보장.",
       "oneOf": [
         {
           "type": "object",
-          "required": ["type", "base", "terms"],
+          "required": [
+            "type",
+            "base",
+            "terms"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "linear" },
-            "base": { "type": "number", "description": "모든 입력이 input_basis 기준점일 때 출력." },
-            "input_basis": { "enum": ["raw", "delta_from_default"], "default": "raw", "description": "raw=입력값 그대로, delta=입력-default." },
-            "rounding": { "type": ["integer", "null"], "minimum": 0, "description": "출력 소수 자릿수." },
+            "type": {
+              "const": "linear"
+            },
+            "base": {
+              "type": "number",
+              "description": "모든 입력이 input_basis 기준점일 때 출력."
+            },
+            "input_basis": {
+              "enum": [
+                "raw",
+                "delta_from_default"
+              ],
+              "default": "raw",
+              "description": "raw=입력값 그대로, delta=입력-default."
+            },
+            "rounding": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "description": "출력 소수 자릿수."
+            },
             "terms": {
-              "type": "array", "minItems": 1,
+              "type": "array",
+              "minItems": 1,
               "items": {
                 "type": "object",
-                "required": ["input", "coefficient"],
+                "required": [
+                  "input",
+                  "coefficient"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "input": { "type": "string", "description": "inputs[].id 참조." },
-                  "coefficient": { "type": "number", "description": "output += coefficient × (basis 적용된 입력값)." }
+                  "input": {
+                    "type": "string",
+                    "description": "inputs[].id 참조."
+                  },
+                  "coefficient": {
+                    "type": "number",
+                    "description": "output += coefficient × (basis 적용된 입력값)."
+                  }
                 }
               }
             }
@@ -602,22 +1581,51 @@
         },
         {
           "type": "object",
-          "required": ["type", "base", "terms"],
+          "required": [
+            "type",
+            "base",
+            "terms"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "percentage" },
-            "base": { "type": "number" },
-            "input_basis": { "enum": ["raw", "delta_from_default"], "default": "raw" },
-            "rounding": { "type": ["integer", "null"], "minimum": 0 },
+            "type": {
+              "const": "percentage"
+            },
+            "base": {
+              "type": "number"
+            },
+            "input_basis": {
+              "enum": [
+                "raw",
+                "delta_from_default"
+              ],
+              "default": "raw"
+            },
+            "rounding": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
             "terms": {
-              "type": "array", "minItems": 1,
+              "type": "array",
+              "minItems": 1,
               "items": {
                 "type": "object",
-                "required": ["input", "pct_per_unit"],
+                "required": [
+                  "input",
+                  "pct_per_unit"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "input": { "type": "string" },
-                  "pct_per_unit": { "type": "number", "description": "입력 1단위당 % 변화. 누적 가산: output = base × (1 + Σ(pct_per_unit×입력)/100)." }
+                  "input": {
+                    "type": "string"
+                  },
+                  "pct_per_unit": {
+                    "type": "number",
+                    "description": "입력 1단위당 % 변화. 누적 가산: output = base × (1 + Σ(pct_per_unit×입력)/100)."
+                  }
                 }
               }
             }
@@ -625,23 +1633,53 @@
         },
         {
           "type": "object",
-          "required": ["type", "input", "table"],
+          "required": [
+            "type",
+            "input",
+            "table"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "lookup" },
-            "input": { "type": "string", "description": "단일 입력 inputs[].id." },
-            "out_of_range": { "enum": ["clamp", "error"], "default": "clamp", "description": "범위 밖 입력 처리(외삽 없음)." },
-            "rounding": { "type": ["integer", "null"], "minimum": 0 },
+            "type": {
+              "const": "lookup"
+            },
+            "input": {
+              "type": "string",
+              "description": "단일 입력 inputs[].id."
+            },
+            "out_of_range": {
+              "enum": [
+                "clamp",
+                "error"
+              ],
+              "default": "clamp",
+              "description": "범위 밖 입력 처리(외삽 없음)."
+            },
+            "rounding": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
             "table": {
-              "type": "array", "minItems": 2,
+              "type": "array",
+              "minItems": 2,
               "description": "in 오름차순 정렬 필수(validator 확인). 사이값은 선형 보간.",
               "items": {
                 "type": "object",
-                "required": ["in", "out"],
+                "required": [
+                  "in",
+                  "out"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "in": { "type": "number" },
-                  "out": { "type": "number" }
+                  "in": {
+                    "type": "number"
+                  },
+                  "out": {
+                    "type": "number"
+                  }
                 }
               }
             }
@@ -649,55 +1687,214 @@
         }
       ]
     },
-
     "action": {
       "type": "object",
-      "required": ["priority", "title", "why"],
+      "required": [
+        "priority",
+        "title",
+        "why"
+      ],
       "additionalProperties": false,
       "properties": {
-        "priority": { "enum": ["P1", "P2", "P3"] },
-        "title": { "type": "string" },
-        "why": { "type": "string" },
-        "metric": { "type": ["string", "null"], "description": "P3 모니터링 지표명." }
+        "priority": {
+          "enum": [
+            "P1",
+            "P2",
+            "P3"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
+        "metric": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "P3 모니터링 지표명."
+        }
       }
     },
-
     "table": {
-      "type": ["object", "null"],
-      "required": ["granularity", "row_limit", "columns", "rows"],
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "granularity",
+        "row_limit",
+        "columns",
+        "rows"
+      ],
       "additionalProperties": false,
       "properties": {
-        "granularity": { "enum": ["aggregated", "raw"] },
-        "row_limit": { "type": "integer", "minimum": 1 },
+        "granularity": {
+          "enum": [
+            "aggregated",
+            "raw"
+          ]
+        },
+        "row_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
         "columns": {
-          "type": "array", "minItems": 1,
+          "type": "array",
+          "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "additionalProperties": false,
             "properties": {
-              "name": { "type": "string" },
-              "type": { "enum": ["string", "number", "date", "category"] },
-              "unit": { "type": ["string", "null"] },
-              "pii_masked": { "type": "boolean", "default": false }
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "string",
+                  "number",
+                  "date",
+                  "category"
+                ]
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "pii_masked": {
+                "type": "boolean",
+                "default": false
+              }
             }
           }
         },
-        "rows": { "type": "array", "items": { "type": "array", "items": { "type": ["string", "number", "null"] } } }
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "cell_gradient": {
+          "description": "매트릭스 셀 그라데이션 (v4 E5). 무채색 보간만 — 상태색 재사용 금지.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "value_column_indices",
+            "scale"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "value_column_indices": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "description": "columns 인덱스 참조 (표시명 중복 가능성 때문에 이름 참조 금지). 참조 열 type=number (QA)"
+            },
+            "scale": {
+              "enum": [
+                "column",
+                "table"
+              ]
+            }
+          }
+        }
       }
     },
-
     "assertion": {
       "description": "선택적 override. 표준 검사는 코드의 QA suite에.",
       "type": "object",
-      "required": ["rule", "on_fail"],
+      "required": [
+        "rule",
+        "on_fail"
+      ],
       "additionalProperties": false,
       "properties": {
-        "rule": { "enum": ["sample_min", "value_label_match", "no_placeholder", "unit_present", "abs_rel_not_mixed"] },
-        "target": { "type": ["string", "null"] },
-        "scope": { "type": ["string", "null"] },
-        "min": { "type": ["number", "null"] },
-        "on_fail": { "enum": ["block", "warn_badge"] }
+        "rule": {
+          "enum": [
+            "sample_min",
+            "value_label_match",
+            "no_placeholder",
+            "unit_present",
+            "abs_rel_not_mixed"
+          ]
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "on_fail": {
+          "enum": [
+            "block",
+            "warn_badge"
+          ]
+        }
+      }
+    },
+    "timeProvenance": {
+      "description": "v4 델타/스파크의 시간 근거 (spec dashboard-profile-v4 §4.0). 문자열이 아니라 구조로 검증한다.",
+      "type": "object",
+      "required": [
+        "source_id",
+        "time_field",
+        "periods"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "sources[].id 중 하나 (QA 대조)"
+        },
+        "time_field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "periods": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "실제 기간 배열 — 중복 없이 오름차순 (QA 검사)"
+        }
       }
     }
   }

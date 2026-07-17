@@ -12,11 +12,12 @@
 -->
 <style>
   :root {
-    --bg:#efebe3; --card:#fbfaf7; --ink:#1c1916; --muted:#6f665b; --soft:#9a9085;
-    --grid:rgba(28,25,22,0.08); --axis:rgba(28,25,22,0.28);
-    --good:#2f9e7d; --bad:#cf6157; --warn:#cf922f; --neutral:#5a5048; --info:#4a6fa5;
-    --cat1:#2f9e7d; --cat2:#4a6fa5; --cat3:#cf922f; --cat4:#8a6fb2;
-    --cat5:#b05d7a; --cat6:#4f8f8f; --cat7:#8a7b45; --cat8:#707070;
+    --bg:#edf3f7; --card:#ffffff; --ink:#303447; --muted:#697386; --soft:#8b96a7;
+    --grid:rgba(48,52,71,0.09); --axis:rgba(48,52,71,0.24);
+    --good:#35a56f; --bad:#d96a73; --warn:#d89b38; --neutral:#707886; --info:#3478f6;
+    --cat1:#3478f6; --cat2:#74a9d8; --cat3:#d96a73; --cat4:#35a56f;
+    --cat5:#bb69d6; --cat6:#f39a7d; --cat7:#6f8d9f; --cat8:#9a9a9a;
+    --radius:12px; --shadow:none; --page-max:1080px; --card-pad-y:16px; --card-pad-x:18px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -24,7 +25,10 @@
     background:var(--bg); color:var(--ink); padding:32px 36px 72px;
     transition:background .25s,color .25s; line-height:1.5;
   }
-  .wrap { max-width:1080px; margin:0 auto; }
+  body.profile-executive_brief { padding-top:34px; }
+  body.profile-analyst_workspace { padding:22px 24px 56px; }
+  body.profile-operations_monitor { padding:28px 32px 64px; }
+  .wrap { max-width:var(--page-max); margin:0 auto; position:relative; }
   .topbar { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:8px; }
   .title { font-family:Georgia,'Times New Roman',serif; font-size:30px; font-weight:600; letter-spacing:-.01em; }
   .meta-line { font-size:12px; color:var(--muted); margin-top:6px; }
@@ -45,19 +49,42 @@
 
   /* 비대칭 스토리 4칸 */
   .story { display:grid; grid-template-columns:1.4fr 1fr 1fr 1.1fr; gap:1px; background:var(--grid);
-    border:1px solid var(--grid); border-radius:12px; overflow:hidden; margin-bottom:22px; }
+    border:1px solid var(--grid); border-radius:var(--radius); overflow:hidden; margin-bottom:22px; box-shadow:var(--shadow); }
   .sf { background:var(--card); padding:15px 16px; }
   .sf-l { font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--soft); margin-bottom:7px; }
   .sf-v { font-family:Georgia,serif; font-size:19px; font-weight:600; }
   .sf-d { font-size:11.5px; color:var(--muted); margin-top:3px; }
 
   .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px; }
-  .kpi { background:var(--card); border:1px solid var(--grid); border-radius:12px; padding:15px 16px; }
+  .kpi { background:var(--card); border:1px solid var(--grid); border-radius:var(--radius); padding:15px 16px; box-shadow:var(--shadow); }
   .kpi-l { font-size:11.5px; color:var(--muted); margin-bottom:9px; min-height:30px; }
   .kpi-v { font-size:25px; font-weight:600; letter-spacing:-.01em; color:var(--ink); }
   .kpi-u { font-size:13px; color:var(--soft); margin-left:2px; font-weight:400; }
   .kpi-d { font-size:11.5px; margin-top:6px; }
   .kpi-den { font-size:10.5px; color:var(--soft); margin-top:4px; }
+  .kpi-spark { margin-top:7px; }
+  .kpi-spark svg { width:100%; max-width:140px; height:40px; margin:0; display:block; }
+  .kpi-spark-l { font-size:10px; color:var(--soft); margin-top:2px; }
+  /* v4 opt-in 레이아웃 (meta.dashboard_profile_contract=="v4"일 때만 생성됨) */
+  .v4-scroll .v4-primary { display:block; margin-bottom:22px; }
+  .v4-demoted { margin-top:14px; border:1px solid var(--grid); border-radius:var(--radius);
+    background:var(--card); padding:10px 14px; }
+  .v4-demoted summary { cursor:pointer; font-size:13px; color:var(--muted); }
+  .v4-demoted[open] summary { margin-bottom:10px; }
+  .v4-ops { display:grid; grid-template-columns:172px 1fr; gap:16px; align-items:start; }
+  .v4-rail { display:flex; flex-direction:column; gap:6px; position:sticky; top:12px; }
+  .rail-item { padding:9px 12px; border:1px solid var(--grid); border-radius:8px;
+    background:var(--card); color:var(--muted); font-size:12.5px; cursor:pointer; }
+  .rail-item.active { color:var(--ink); border-color:var(--info); font-weight:600; }
+  @media (max-width: 860px) {
+    .v4-ops { grid-template-columns:1fr; }
+    .v4-rail { flex-direction:row; overflow-x:auto; position:static; } /* 좁은 화면: 레일→상단 탭 강등 */
+  }
+  .sm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:10px; margin-bottom:16px; }
+  .sm-grid .sm-card { min-height:0; }
+  .sm-grid svg { width:100%; }
+  .dt td.grad-cell { font-variant-numeric:tabular-nums; }
   .badge { display:inline-block; font-size:10px; padding:1px 6px; border-radius:5px; margin-left:6px;
     background:var(--warn); color:#fff; }
 
@@ -66,15 +93,16 @@
   .row-2a { grid-template-columns:1.5fr 1fr; }
   .row-3 { grid-template-columns:repeat(3,1fr); }
   .row-1 { grid-template-columns:1fr; }
-  .card { background:var(--card); border:1px solid var(--grid); border-radius:12px; padding:16px 18px;
-    display:flex; flex-direction:column; }
+  .charts.secondary { margin-top:14px; opacity:.96; }
+  .card { background:var(--card); border:1px solid var(--grid); border-radius:var(--radius); padding:var(--card-pad-y) var(--card-pad-x);
+    display:flex; flex-direction:column; box-shadow:var(--shadow); }
   .cc-t { font-size:14px; font-weight:700; }
   .cc-d { font-size:11.5px; color:var(--muted); margin:2px 0 4px; }
   svg { width:min(100%, 632px); height:auto; margin:6px auto 0; display:block; overflow:visible; }
   .legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:11px; color:var(--muted); }
   .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
 
-  .sim { background:var(--card); border:1px solid var(--axis); border-radius:12px; padding:18px 20px; margin:14px 0; }
+  .sim { background:var(--card); border:1px solid var(--axis); border-radius:var(--radius); padding:18px 20px; margin:14px 0; box-shadow:var(--shadow); }
   .sim-t { font-size:13px; font-weight:700; margin-bottom:14px; }
   .sim-row { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
   .sim-row label { font-size:12px; color:var(--muted); width:130px; }
@@ -84,7 +112,7 @@
   .sim-out b { font-family:Georgia,serif; font-size:22px; color:var(--ink); margin-left:6px; }
 
   .actions { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
-  .act { background:var(--card); border:1px solid var(--grid); border-radius:12px; padding:14px 15px; }
+  .act { background:var(--card); border:1px solid var(--grid); border-radius:var(--radius); padding:14px 15px; box-shadow:var(--shadow); }
   .act-p { font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--info); margin-bottom:6px; }
   .act-t { font-size:13px; font-weight:600; margin-bottom:4px; }
   .act-w { font-size:11.5px; color:var(--muted); }
@@ -92,8 +120,89 @@
   table.dt { width:100%; border-collapse:collapse; margin-top:8px; font-size:12.5px; }
   table.dt th, table.dt td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--grid); }
   table.dt th { color:var(--muted); font-weight:600; font-size:11px; }
+
+  body.profile-executive_brief .title { font-size:32px; }
+  body.profile-executive_brief .kpis { grid-template-columns:repeat(4,1fr); }
+  body.profile-executive_brief .kpi-v { font-size:27px; }
+  body.profile-executive_brief .ptitle { font-size:22px; }
+  .exec-hero { display:grid; grid-template-columns:minmax(0,1.62fr) minmax(280px,.88fr); gap:14px; align-items:stretch; margin-bottom:8px; }
+  .exec-main .card { height:100%; min-height:310px; }
+  .exec-main svg { width:min(100%,720px); }
+  .exec-side { display:grid; gap:12px; align-content:start; }
+  .exec-side .story { grid-template-columns:1fr; margin-bottom:0; }
+  .exec-side .sf { padding:12px 13px; }
+  .exec-side .sf-v { font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif; font-size:15px; line-height:1.35; }
+  .exec-side .support-card svg { width:min(100%,340px); }
+
+  body.profile-analyst_workspace .wrap { max-width:var(--page-max); }
+  body.profile-analyst_workspace .title { font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif; font-size:24px; letter-spacing:0; }
+  body.profile-analyst_workspace .tabs { margin:14px 0 12px; }
+  body.profile-analyst_workspace .tab { border-radius:6px; padding:7px 11px; font-size:12px; }
+  body.profile-analyst_workspace .kpis { grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:14px; }
+  body.profile-analyst_workspace .kpi { padding:11px 12px; }
+  body.profile-analyst_workspace .kpi-l { min-height:24px; font-size:10.5px; margin-bottom:6px; }
+  body.profile-analyst_workspace .kpi-v { font-size:21px; }
+  body.profile-analyst_workspace .charts { gap:10px; }
+  body.profile-analyst_workspace .card { --card-pad-y:12px; --card-pad-x:13px; }
+  body.profile-analyst_workspace .cc-t { font-size:13px; }
+  body.profile-analyst_workspace .cc-d { font-size:10.8px; }
+  .analyst-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:10px; margin-bottom:8px; }
+  .analyst-grid .card { grid-column:span 4; min-height:260px; }
+  .analyst-grid .chart-type-line,
+  .analyst-grid .chart-type-area,
+  .analyst-grid .chart-type-scatter,
+  .analyst-grid .chart-type-heatmap,
+  .analyst-grid .chart-type-boxplot { grid-column:span 6; }
+  .analyst-grid .chart-type-stacked_bar,
+  .analyst-grid .chart-type-waterfall,
+  .analyst-grid .chart-type-slope { grid-column:span 6; }
+  .analyst-grid svg { width:min(100%,440px); }
+
+  body.profile-operations_monitor .wrap { max-width:var(--page-max); padding-left:92px; }
+  body.profile-operations_monitor .wrap::before {
+    content:""; position:absolute; left:0; top:4px; width:70px; min-height:620px;
+    border-radius:26px; background:var(--info); color:#fff; display:flex; justify-content:center;
+    padding-top:30px; font-weight:700; letter-spacing:.08em; box-shadow:0 16px 34px rgba(30,68,112,.18);
+  }
+  /* v4 계약 run: 실제 레일(.v4-rail)이 있으므로 장식용 가짜 레일 제거 */
+  body.v4-contract.profile-operations_monitor .wrap { padding-left:0; }
+  body.v4-contract.profile-operations_monitor .wrap::before { display:none; }
+  body.profile-operations_monitor .topbar { align-items:center; }
+  body.profile-operations_monitor .title { font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif; font-size:27px; letter-spacing:0; }
+  body.profile-operations_monitor .tabs { margin:18px 0 14px; }
+  body.profile-operations_monitor .tab { border-radius:999px; padding:7px 15px; }
+  body.profile-operations_monitor .kpis { grid-template-columns:repeat(4,1fr); }
+  body.profile-operations_monitor .story { grid-template-columns:repeat(4,1fr); }
+  .ops-layout { display:grid; grid-template-columns:minmax(270px,.82fr) minmax(0,1.48fr); gap:14px; align-items:start; }
+  .ops-status-stack { display:grid; gap:12px; align-content:start; min-width:0; }
+  /* v4 발견: 위 body.profile-operations_monitor .kpis/.story(4열) 규칙이 특이도로 이겨
+     스택이 4열 강제 → E1 스파크(140px)와 결합해 grid blowout. body 접두로 특이도 교정 +
+     minmax(0,1fr)로 축소 허용. */
+  body.profile-operations_monitor .ops-status-stack .kpis { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:0; }
+  .ops-status-stack .kpi { padding:13px 14px; min-width:0; }
+  .ops-status-stack .kpi-v { font-size:23px; }
+  body.profile-operations_monitor .ops-status-stack .story { grid-template-columns:1fr; margin-bottom:0; }
+  body.profile-operations_monitor .ops-status-stack .actions { grid-template-columns:1fr; margin-top:0; }
+  .ops-trend-stack { display:grid; gap:14px; }
+  .ops-trend-stack .charts { margin-bottom:0; }
+  .ops-trend-stack .row-2a { grid-template-columns:1fr 1fr; }
+
   @media (max-width:820px){
-    .kpis{grid-template-columns:1fr 1fr;} .story,.charts.row-2a,.charts.row-3,.actions{grid-template-columns:1fr;}
+    body{padding:22px 18px 48px;}
+    body.profile-operations_monitor .wrap{padding-left:0;}
+    body.profile-operations_monitor .wrap::before{display:none;}
+    .kpis, body.profile-analyst_workspace .kpis, body.profile-executive_brief .kpis, body.profile-operations_monitor .kpis{grid-template-columns:1fr 1fr;}
+    .story,.charts.row-2a,.charts.row-3,.actions, body.profile-operations_monitor .story,
+    .exec-hero,.analyst-grid,.ops-layout{grid-template-columns:1fr;}
+    .analyst-grid .card,
+    .analyst-grid .chart-type-line,
+    .analyst-grid .chart-type-area,
+    .analyst-grid .chart-type-scatter,
+    .analyst-grid .chart-type-heatmap,
+    .analyst-grid .chart-type-boxplot,
+    .analyst-grid .chart-type-stacked_bar,
+    .analyst-grid .chart-type-waterfall,
+    .analyst-grid .chart-type-slope{grid-column:span 1;}
     svg{width:100%;}
   }
 </style>
@@ -119,11 +228,34 @@
 
 <script>
 const THEMES = {
-  light: {bg:"#efebe3",card:"#fbfaf7",ink:"#1c1916",muted:"#6f665b",soft:"#9a9085",grid:"rgba(28,25,22,0.08)",axis:"rgba(28,25,22,0.28)",good:"#2f9e7d",bad:"#cf6157",warn:"#cf922f",neutral:"#5a5048",info:"#4a6fa5",cat1:"#2f9e7d",cat2:"#4a6fa5",cat3:"#cf922f",cat4:"#8a6fb2",cat5:"#b05d7a",cat6:"#4f8f8f",cat7:"#8a7b45",cat8:"#707070"},
-  dark:  {bg:"#14120f",card:"#1e1b17",ink:"#f2ede4",muted:"#a59a8d",soft:"#6f665b",grid:"rgba(242,237,228,0.10)",axis:"rgba(242,237,228,0.30)",good:"#46b892",bad:"#e07d74",warn:"#e0a948",neutral:"#c7bdb0",info:"#7aa0d4",cat1:"#46b892",cat2:"#7aa0d4",cat3:"#e0a948",cat4:"#a991d4",cat5:"#d1849d",cat6:"#6eb5b5",cat7:"#b2a35f",cat8:"#a6a6a6"}
+  light: {bg:"#edf3f7",card:"#ffffff",ink:"#303447",muted:"#697386",soft:"#8b96a7",grid:"rgba(48,52,71,0.09)",axis:"rgba(48,52,71,0.24)",good:"#35a56f",bad:"#d96a73",warn:"#d89b38",neutral:"#707886",info:"#3478f6",cat1:"#3478f6",cat2:"#74a9d8",cat3:"#d96a73",cat4:"#35a56f",cat5:"#bb69d6",cat6:"#f39a7d",cat7:"#6f8d9f",cat8:"#9a9a9a",radius:"12px",shadow:"none",pageMax:"1080px",cardPadY:"16px",cardPadX:"18px"},
+  dark:  {bg:"#151923",card:"#202636",ink:"#f3f7fb",muted:"#aab4c3",soft:"#6f7b8c",grid:"rgba(243,247,251,0.10)",axis:"rgba(243,247,251,0.28)",good:"#48bf8a",bad:"#eb7f87",warn:"#e8b24c",neutral:"#c0c8d2",info:"#83aefb",cat1:"#83aefb",cat2:"#74c0d8",cat3:"#eb7f87",cat4:"#48bf8a",cat5:"#ce82e8",cat6:"#f7a58b",cat7:"#9db2c4",cat8:"#b5b5b5",radius:"12px",shadow:"none",pageMax:"1080px",cardPadY:"16px",cardPadX:"18px"}
+};
+const DASHBOARD_PROFILES = new Set(["executive_brief","analyst_workspace","operations_monitor"]);
+const AUDIENCE_LABELS = {executive:"요약 검토",operator:"운영 검토",analyst:"분석 검토",mixed:"검토용"};
+const PROFILE_THEMES = {
+  light: {
+    executive_brief: {bg:"#edf3f7",card:"#ffffff",ink:"#303447",muted:"#697386",soft:"#8b96a7",grid:"rgba(48,52,71,0.09)",axis:"rgba(48,52,71,0.24)",info:"#3478f6",cat1:"#3478f6",cat2:"#74a9d8",cat3:"#d96a73",cat4:"#35a56f",radius:"14px",shadow:"0 8px 22px rgba(40,55,75,.06)",pageMax:"1120px"},
+    analyst_workspace: {bg:"#f4f6f8",card:"#ffffff",ink:"#252b36",muted:"#606b78",soft:"#8b96a3",grid:"rgba(37,43,54,0.10)",axis:"rgba(37,43,54,0.26)",info:"#2080a5",cat1:"#2080a5",cat2:"#e39aa6",cat3:"#bfc6cd",cat4:"#3f8d8d",radius:"8px",shadow:"none",pageMax:"1240px",cardPadY:"12px",cardPadX:"13px"},
+    operations_monitor: {bg:"#e8f2f7",card:"#fbfdff",ink:"#283044",muted:"#647286",soft:"#8b9aae",grid:"rgba(40,48,68,0.10)",axis:"rgba(40,48,68,0.26)",info:"#4f73aa",cat1:"#4f73aa",cat2:"#e9899b",cat3:"#b5c9d9",cat4:"#6bc3b4",radius:"18px",shadow:"0 12px 30px rgba(37,70,100,.10)",pageMax:"1180px"}
+  },
+  dark: {
+    executive_brief: {bg:"#151923",card:"#202636",ink:"#f3f7fb",muted:"#aab4c3",soft:"#6f7b8c",grid:"rgba(243,247,251,0.10)",axis:"rgba(243,247,251,0.28)",info:"#83aefb",cat1:"#83aefb",cat2:"#74c0d8",cat3:"#eb7f87",cat4:"#48bf8a",radius:"14px",shadow:"none",pageMax:"1120px"},
+    analyst_workspace: {bg:"#111820",card:"#1a222c",ink:"#f0f4f8",muted:"#a0acb9",soft:"#687585",grid:"rgba(240,244,248,0.11)",axis:"rgba(240,244,248,0.28)",info:"#4aa7c9",cat1:"#4aa7c9",cat2:"#e59daa",cat3:"#9ca8b3",cat4:"#5ab6aa",radius:"8px",shadow:"none",pageMax:"1240px",cardPadY:"12px",cardPadX:"13px"},
+    operations_monitor: {bg:"#111827",card:"#1d2635",ink:"#f6f8fb",muted:"#a9b5c4",soft:"#718197",grid:"rgba(246,248,251,0.10)",axis:"rgba(246,248,251,0.28)",info:"#7aa2df",cat1:"#7aa2df",cat2:"#e8899a",cat3:"#93b9d2",cat4:"#70c7b9",radius:"18px",shadow:"none",pageMax:"1180px"}
+  }
 };
 let THEME = "light";
-function applyTheme(n){ const c=THEMES[n]; for(const k in c) document.documentElement.style.setProperty("--"+k,c[k]); THEME=n;
+function cssVarName(k){ return k.replace(/[A-Z]/g, m=>"-"+m.toLowerCase()); }
+function setVars(vars){ for(const k in vars) document.documentElement.style.setProperty("--"+cssVarName(k), vars[k]); }
+function dashboardProfile(){ const p=(DATA.meta&&DATA.meta.dashboard_profile)||"executive_brief"; return DASHBOARD_PROFILES.has(p)?p:"executive_brief"; }
+function applyProfileClass(){
+  const p=dashboardProfile();
+  document.body.classList.remove("profile-executive_brief","profile-analyst_workspace","profile-operations_monitor");
+  document.body.classList.add("profile-"+p);
+  return p;
+}
+function applyTheme(n){ const profile=applyProfileClass(); setVars(THEMES[n]); setVars((PROFILE_THEMES[n]||{})[profile]||{}); THEME=n;
   document.getElementById("theme-btn").textContent = n==="light"?"다크 모드":"라이트 모드"; render(); }
 function toggleTheme(){ applyTheme(THEME==="light"?"dark":"light"); }
 function rc(role){ return getComputedStyle(document.documentElement).getPropertyValue("--"+(role||"info")).trim(); }
@@ -170,6 +302,7 @@ function renderLine(enc, asArea=false){
   const xs=enc.x.values, series=enc.series;
   const nums=series.flatMap(se=>se.values.filter(v=>v!==null));
   let mn=Math.min(...nums), mx=Math.max(...nums);
+  if(enc.__domain){ mn=enc.__domain[0]; mx=enc.__domain[1]; } // v4 E4: 그룹 공통 y-domain
   if(enc.zero_baseline) mn=Math.min(0,mn); if(mx===mn) mx=mn+1; const pad=(mx-mn)*0.1; mn-=pad; mx+=pad;
   const X=i=>M.l+(xs.length>1? PW*i/(xs.length-1):PW/2), Y=v=>M.t+PH-PH*(v-mn)/(mx-mn);
   let s=svgOpen()+axes()+yticks(mn,mx);
@@ -218,8 +351,9 @@ function renderHorizontalBar(enc){
 }
 function renderBar(enc){
   const xs=enc.x.values, ser=enc.series, n=ser.length;
-  if(n===1 && denseLabels(xs)) return renderHorizontalBar(enc);
+  if(n===1 && denseLabels(xs) && !enc.__domain) return renderHorizontalBar(enc);
   let mx=0; xs.forEach((_,i)=>ser.forEach(s=>mx=Math.max(mx,s.values[i]||0))); if(mx===0)mx=1;
+  if(enc.__domain) mx=Math.max(enc.__domain[1],1); // v4 E4: 그룹 공통 y-domain (막대는 0 기준)
   const gw=PW/xs.length, bw=Math.min(gw*0.7/n, 46/n);
   const Y=v=>M.t+PH-PH*v/mx;
   let s=svgOpen()+axes()+yticks(0,mx);
@@ -330,22 +464,63 @@ function legend(ch){ if(!ch.encoding.series||ch.encoding.series.length<2||ch.typ
   return `<div class="legend">`+ch.encoding.series.map(s=>`<span><i style="background:${rc(s.role||'info')}"></i>${s.label}</span>`).join("")+`</div>`; }
 
 /* ───── 패널/요소 렌더 ───── */
-function kpiCard(k){ const dcol=k.comparison? rc(k.status):rc('muted');
+function kpiDeltaColor(k){ // v4 E1 색 룰(spec §3): good/bad만 상태 2색, warn·neutral은 muted — 세 번째 상태색 금지
+  return k.status==="good"?rc("good"):k.status==="bad"?rc("bad"):rc("muted"); }
+function kpiDelta(k){ const c=k.comparison; if(!c) return "";
+  const sym=c.direction==="down"?"▼":c.direction==="up"?"▲":"—";
+  if(c.kind==="period_delta"){
+    return `<div class="kpi-d kpi-delta-v4" style="color:${kpiDeltaColor(k)}">${sym} ${Math.abs(c.delta)} ${k.unit} <span class="kpi-basis">(${c.basis})</span></div>`;
+  }
+  // kind 없음/benchmark: 기존 run 의미 보존 — 현행 렌더 유지 (v4 spec §4.1)
+  return `<div class="kpi-d" style="color:${rc(k.status)}">${sym} ${Math.abs(c.delta)}${k.unit} (${c.basis})</div>`; }
+function kpiSpark(k){ const t=k.trend;
+  if(!t||!Array.isArray(t.points)||t.points.length<4) return "";
+  const pts=t.points, W=140, H=40, pad=3;
+  const mn=Math.min(...pts), mx=Math.max(...pts), span=(mx-mn)||1;
+  const step=(W-2*pad)/(pts.length-1);
+  const coords=pts.map((v,i)=>`${(pad+i*step).toFixed(1)},${(H-pad-((v-mn)/span)*(H-2*pad)).toFixed(1)}`).join(" ");
+  return `<div class="kpi-spark"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t.period_label||"추세"}">`+
+    `<polyline fill="none" stroke="var(--soft)" stroke-width="1.5" points="${coords}"/></svg>`+
+    (t.period_label?`<div class="kpi-spark-l">${t.period_label}</div>`:"")+`</div>`; }
+function kpiCard(k){
   const badge = (DATA.assertions||[]).some(a=>a.rule==="sample_min"&&a.target===k.id&&DATA.meta.row_count<a.min)? `<span class="badge">표본주의</span>`:"";
   return `<div class="kpi"><div class="kpi-l">${k.label}${badge}</div>`+
     `<div class="kpi-v">${fmt(k.value,k.format)}<span class="kpi-u">${k.unit}</span></div>`+
-    (k.comparison? `<div class="kpi-d" style="color:${dcol}">${k.comparison.direction==="down"?"▼":k.comparison.direction==="up"?"▲":"—"} ${Math.abs(k.comparison.delta)}${k.unit} (${k.comparison.basis})</div>`:"")+
+    kpiDelta(k)+kpiSpark(k)+
     (k.denominator? `<div class="kpi-den">${k.denominator}</div>`:"")+`</div>`; }
 
 function story(st){ if(!st)return ""; const cells=[["현황",st.now],["원인",st.why],["결과",st.so],["대응",st.act]];
   return `<div class="story">`+cells.map(([l,c])=>`<div class="sf"><div class="sf-l">${l}</div><div class="sf-v">${c.value}</div><div class="sf-d">${c.desc}</div></div>`).join("")+`</div>`; }
 
-function chartsBlock(charts){ const n=charts.length; let cls = n>=3?"row-3": n===2?"row-2a":"row-1";
+// v4 E4: 같은 panel 안에서 small_multiple_group으로 묶인 차트를 공통 y-domain 그리드로 렌더
+function smallMultipleGrid(groupId, chs){
+  let mn=Infinity, mx=-Infinity;
+  chs.forEach(ch=>((ch.encoding||{}).series||[]).forEach(se=>(se.values||[]).forEach(v=>{
+    if(v!==null&&isFinite(v)){ mn=Math.min(mn,v); mx=Math.max(mx,v); } })));
+  if(!isFinite(mn)){ mn=0; mx=1; }
+  chs.forEach(ch=>{ ch.encoding.__domain=[mn,mx]; });
+  return `<div class="sm-grid" data-group="${groupId}">`+chs.map(ch=>card(ch,"sm-card")).join("")+`</div>`;
+}
+function splitMultiples(charts){ const groups={}, solo=[];
+  (charts||[]).forEach(ch=>{ const g=ch.small_multiple_group;
+    if(g){ (groups[g]=groups[g]||[]).push(ch); } else solo.push(ch); });
+  return [groups, solo]; }
+function chartsBlock(charts, variant=""){ if(!charts||!charts.length)return "";
+  const [groups, solo]=splitMultiples(charts);
+  const groupHtml=Object.entries(groups).map(([g,chs])=>smallMultipleGrid(g,chs)).join("");
+  if(variant==="analyst"){
+  return (solo.length?`<div class="analyst-grid">`+solo.map(ch=>card(ch)).join("")+`</div>`:"")+groupHtml;
+}
+  if(!solo.length) return groupHtml;
+  const n=solo.length; let cls = n>=3?"row-3": n===2?"row-2a":"row-1";
+  const extra = variant==="secondary"?" secondary": variant==="ops-trend"?" ops-trend":"";
   // 비대칭: 5개면 첫 행 2개(1.5:1) + 둘째 행 3개
-  if(n===5){ return `<div class="charts row-2a">`+charts.slice(0,2).map(card).join("")+`</div>`+
-                    `<div class="charts row-3">`+charts.slice(2).map(card).join("")+`</div>`; }
-  return `<div class="charts ${cls}">`+charts.map(card).join("")+`</div>`; }
-function card(ch){ return `<div class="card"><div class="cc-t">${ch.title}</div>`+
+  if(n===5){ return `<div class="charts row-2a${extra}">`+solo.slice(0,2).map(card).join("")+`</div>`+
+                    `<div class="charts row-3${extra}">`+solo.slice(2).map(card).join("")+`</div>`+groupHtml; }
+  return `<div class="charts ${cls}${extra}">`+solo.map(card).join("")+`</div>`+groupHtml; }
+function card(ch, extraClass=""){ const typeClass=`chart-type-${String(ch.type||"unknown").replace(/[^a-z0-9_-]/gi,"_")}`;
+  // chart-card: 렌더 QA가 차트 SVG만 세는 selector — KPI 스파크(v4 E1) SVG와 구분
+  return `<div class="card chart-card ${typeClass}${extraClass?` ${extraClass}`:""}"><div class="cc-t">${ch.title}</div>`+
   (ch.desc?`<div class="cc-d">${ch.desc}</div>`:"")+chartSVG(ch)+legend(ch)+`</div>`; }
 
 function simBlock(sims){ if(!sims||!sims.length)return ""; return sims.map(sm=>{
@@ -363,22 +538,119 @@ function onSim(id){ const sm=findSim(id); const vals={};
 function findSim(id){ for(const p of DATA.panels) for(const s of (p.simulators||[])) if(s.id===id) return s; }
 
 function actions(a){ if(!a||!a.length)return ""; return `<div class="actions">`+a.map(x=>`<div class="act"><div class="act-p">${x.priority}</div><div class="act-t">${x.title}</div><div class="act-w">${x.why}${x.metric?` · ${x.metric}`:""}</div></div>`).join("")+`</div>`; }
+// v4 E5: 셀 그라데이션 — 무채색 보간만 (밀도 표현, 상태색 재사용 금지). min==max는 동일 중립색.
+function gradientRanges(t){
+  const grad=t.cell_gradient; if(!grad||!Array.isArray(grad.value_column_indices)) return null;
+  const rows=t.rows.slice(0,t.row_limit); // scale 계산 기준: 렌더되는 rows[:row_limit]
+  const ranges={};
+  const collect=(idxs)=>{ let mn=Infinity,mx=-Infinity;
+    rows.forEach(r=>idxs.forEach(ci=>{ const v=r[ci];
+      if(typeof v==="number"&&isFinite(v)){ mn=Math.min(mn,v); mx=Math.max(mx,v); } }));
+    return isFinite(mn)?[mn,mx]:null; };
+  if(grad.scale==="table"){ const range=collect(grad.value_column_indices);
+    grad.value_column_indices.forEach(ci=>ranges[ci]=range); }
+  else grad.value_column_indices.forEach(ci=>{ ranges[ci]=collect([ci]); });
+  return ranges;
+}
+function gradientStyle(v, range){
+  if(typeof v!=="number"||!isFinite(v)||!range) return ""; // null/비숫자: 배경 없음
+  const [mn,mx]=range;
+  if(mx===mn) return ` class="grad-cell" style="background:hsl(0 0% 88%)"`;
+  const t=(v-mn)/(mx-mn), l=94-46*t; // 무채색: 94%(옅음)→48%(진함)
+  return ` class="grad-cell" style="background:hsl(0 0% ${l.toFixed(1)}%);color:${l<64?"#fff":"var(--ink)"}"`;
+}
 function tableBlock(t){ if(!t)return ""; const head=t.columns.map(c=>`<th>${c.name}${c.unit?` (${c.unit})`:""}</th>`).join("");
-  const body=t.rows.slice(0,t.row_limit).map(r=>`<tr>${r.map(v=>`<td>${v===null?"—":v}</td>`).join("")}</tr>`).join("");
+  const ranges=gradientRanges(t);
+  const body=t.rows.slice(0,t.row_limit).map(r=>`<tr>${r.map((v,ci)=>{
+    const style=ranges&&ranges[ci]!==undefined? gradientStyle(v,ranges[ci]):"";
+    return `<td${style}>${v===null?"—":v}</td>`; }).join("")}</tr>`).join("");
   return `<table class="dt"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`; }
 
+function panelHeader(p){ return `<div class="ptitle">${p.title}</div>`+(p.method?`<div class="pmethod">${p.method}</div>`:""); }
+function kpisBlock(i){ return i===ACTIVE&&DATA.kpis?`<div class="kpis">${DATA.kpis.map(kpiCard).join("")}</div>`:""; }
+function isTrendChart(ch){ const x=((ch.encoding||{}).x||{}); return ["line","area","slope"].includes(ch.type)||x.type==="time"; }
+function splitCharts(charts, predicate){ const yes=[], no=[]; (charts||[]).forEach(ch=>(predicate(ch)?yes:no).push(ch)); return [yes,no]; }
+function metaLine(){
+  const m=DATA.meta||{};
+  const parts=[m.domain, m.period||"", m.row_count!=null?`${m.row_count}건`:""];
+  const audience=AUDIENCE_LABELS[m.audience]||"";
+  if(audience) parts.push(audience);
+  return parts.filter(Boolean).join(" · ");
+}
+
+function renderExecutivePanel(p,i){
+  const charts=p.charts||[];
+  const main=charts[0];
+  const support=charts.slice(1,3);
+  const rest=charts.slice(3);
+  const side=[story(p.story), ...support.map(ch=>card(ch,"support-card"))].filter(Boolean).join("");
+  return panelHeader(p)+kpisBlock(i)+
+    (main?`<div class="exec-hero"><div class="exec-main">${card(main,"main-card")}</div>${side?`<div class="exec-side">${side}</div>`:""}</div>`:"")+
+    chartsBlock(rest,"secondary")+simBlock(p.simulators)+actions(p.actions)+tableBlock(p.table);
+}
+
+function renderAnalystPanel(p,i){
+  return panelHeader(p)+story(p.story)+kpisBlock(i)+chartsBlock(p.charts||[],"analyst")+
+    simBlock(p.simulators)+tableBlock(p.table)+actions(p.actions);
+}
+
+function renderOperationsPanel(p,i){
+  const charts=p.charts||[];
+  // v4 E4: 그룹 차트는 lead/rest 분배에서 제외하고 그리드로 묶어 렌더
+  const grouped=charts.filter(ch=>ch.small_multiple_group);
+  const ungrouped=charts.filter(ch=>!ch.small_multiple_group);
+  const split=splitCharts(ungrouped,isTrendChart);
+  const lead=split[0].length?split[0].slice(0,2):ungrouped.slice(0,2);
+  const leadIds=new Set(lead.map(ch=>ch.id));
+  const rest=ungrouped.filter(ch=>!leadIds.has(ch.id));
+  return panelHeader(p)+`<div class="ops-layout"><div class="ops-status-stack">`+
+    kpisBlock(i)+story(p.story)+actions(p.actions)+`</div><div class="ops-trend-stack">`+
+    chartsBlock(lead,"ops-trend")+chartsBlock(rest,"secondary")+chartsBlock(grouped)+simBlock(p.simulators)+
+    `</div></div>`+tableBlock(p.table);
+}
+
+function renderPanel(profile,p,i){
+  if(profile==="analyst_workspace") return renderAnalystPanel(p,i);
+  if(profile==="operations_monitor") return renderOperationsPanel(p,i);
+  return renderExecutivePanel(p,i);
+}
+
 let ACTIVE=0;
+function contractV4(){ return !!(DATA.meta&&DATA.meta.dashboard_profile_contract==="v4"); }
+function panelSurface(p){ return p.surface||"primary"; }
+function initSimulators(){ DATA.panels.forEach(p=>(p.simulators||[]).forEach(s=>onSim(s.id))); }
+// v4 E2: analyst 단일 스크롤 — primary 패널을 한 화면에 쌓고 detail/appendix는 접힘으로 강등
+function renderAnalystSingleScroll(profile){
+  document.getElementById("d-tabs").innerHTML="";
+  const primary=DATA.panels.filter(p=>panelSurface(p)==="primary");
+  const demoted=DATA.panels.filter(p=>panelSurface(p)!=="primary");
+  document.getElementById("d-panels").innerHTML=
+    `<div class="v4-scroll" data-layout="${profile}">`+
+    primary.map((p,i)=>`<section class="panel active v4-primary">`+renderAnalystPanel(p,i===0?ACTIVE:-1)+`</section>`).join("")+
+    demoted.map(p=>`<details class="v4-demoted"><summary>${p.title}</summary><div class="panel active">`+renderAnalystPanel(p,-1)+`</div></details>`).join("")+
+    `</div>`;
+}
+// v4 E3: operations 레일 — 기존 ACTIVE 패널 switcher의 레일 UI 재표현 (패널 제목 파생, 브랜드 비의존)
+function renderOperationsRail(profile){
+  document.getElementById("d-tabs").innerHTML="";
+  document.getElementById("d-panels").innerHTML=
+    `<div class="v4-ops" data-layout="${profile}">`+
+    `<nav class="v4-rail">`+DATA.panels.map((p,i)=>`<div class="rail-item ${i===ACTIVE?"active":""}" onclick="setTab(${i})">${p.title}</div>`).join("")+`</nav>`+
+    `<div class="v4-ops-body">`+DATA.panels.map((p,i)=>`<div class="panel ${i===ACTIVE?"active":""}" data-layout="${profile}">`+renderOperationsPanel(p,i)+`</div>`).join("")+`</div>`+
+    `</div>`;
+}
 function render(){
+  const profile=dashboardProfile();
+  document.body.classList.toggle("v4-contract", contractV4());
   document.getElementById("d-title").textContent=DATA.meta.title;
-  document.getElementById("d-meta").textContent=`${DATA.meta.domain} · ${DATA.meta.period||""} · ${DATA.meta.row_count!=null?DATA.meta.row_count+"건":""} · ${DATA.meta.audience}`;
+  document.getElementById("d-meta").textContent=metaLine();
+  if(contractV4()&&profile==="analyst_workspace"){ renderAnalystSingleScroll(profile); initSimulators(); return; }
+  if(contractV4()&&profile==="operations_monitor"){ renderOperationsRail(profile); initSimulators(); return; }
   document.getElementById("d-tabs").innerHTML=DATA.panels.map((p,i)=>`<div class="tab ${i===ACTIVE?"active":""}" onclick="setTab(${i})">${p.title}</div>`).join("");
   document.getElementById("d-panels").innerHTML=DATA.panels.map((p,i)=>{
-    return `<div class="panel ${i===ACTIVE?"active":""}">`+
-      `<div class="ptitle">${p.title}</div>`+(p.method?`<div class="pmethod">${p.method}</div>`:"")+
-      story(p.story)+ (i===ACTIVE&&DATA.kpis?`<div class="kpis">${DATA.kpis.map(kpiCard).join("")}</div>`:"")+
-      chartsBlock(p.charts)+simBlock(p.simulators)+actions(p.actions)+tableBlock(p.table)+`</div>`;
+    return `<div class="panel ${i===ACTIVE?"active":""}" data-layout="${profile}">`+renderPanel(profile,p,i)+`</div>`;
   }).join("");
-  DATA.panels.forEach(p=>(p.simulators||[]).forEach(s=>onSim(s.id)));
+  initSimulators();
 }
 function setTab(i){ ACTIVE=i; render(); }
 applyTheme("light");

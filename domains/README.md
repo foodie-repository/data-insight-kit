@@ -64,6 +64,41 @@ runs/my-run/domain_pack_context.md
 domain pack 기준이 결론이나 표현 수위를 바꾸면 중간 확인 단계에서 사용자가
 승인해야 합니다.
 
+## 인터뷰로 시작하기 (domain pack 없이)
+
+domain pack이 아직 없어도 domain mode로 시작할 수 있습니다. wrapper 실행 시
+`--domain-mode` 플래그를 붙이면 `input/run_context.json`에 스탬프가 기록되고,
+이후 재실행에서 플래그를 생략해도 유지됩니다(수동 manifest 편집 불필요).
+
+```bash
+bash scripts/run_codex_pipeline.sh my-run --domain-mode
+```
+
+(기존 방식대로 run의 `manifest.json`에 `"domain_mode": true`를 표시해도
+동일하게 인식됩니다.) domain mode가 켜지면 각 확인 단계 질문에 추가
+확인 질문(행의 의미, 제외 기준, 지표 계산 기준 등)이 부족한 항목 우선으로
+붙습니다. 답변이 쌓이면 파생 생성기로 도메인 확인 정보를 만듭니다.
+
+```bash
+python3 scripts/build_domain_intake.py my-run
+# -> runs/my-run/input/domain_intake.json (generated_by + 근거 답변 id 기록)
+```
+
+- 수동으로 작성한 `domain_intake.json`이 이미 있으면 그 파일이 우선하고,
+  인터뷰 답변은 남은 질문 목록으로만 보강됩니다.
+- 도메인 기준 충족 상태(readiness)는 결정적으로 계산되며, 부족하면 도메인
+  결론(추천·원인·성과 확정)이 QA에서 차단됩니다 — 인터뷰는 기회를 늘릴 뿐
+  게이트를 약화하지 않습니다.
+
+## run 지식의 승격 흐름
+
+run에서 나온 반복 가능한 도메인 지식은 자동으로 domain pack이 되지 않습니다.
+
+1. run 중 발견한 재사용 후보는 `runs/<run-id>/outputs/domain_pack_update_candidates.md`에 남깁니다.
+   (용어, KPI 기준, 제외 규칙, 금지 표현 등 — 이 파일이 승격 후보의 단일 수집처)
+2. 사람이 후보를 검토해 `domains/<domain>/` 파일에 직접 반영합니다.
+3. run 진행 중 `domains/<domain>/` 자동 수정은 훅이 차단합니다 (영구 non-goal).
+
 ## 작성 체크리스트
 
 - [ ] 도메인 용어를 사용자용 표현으로 풀어썼는가?

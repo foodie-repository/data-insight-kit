@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/dependency_plan.schema.json",
+  "title": "data-insight-kit dependency preflight/approval/install plan",
+  "description": "scripts/dependency_preflight.py가 작성하는 계약. canonical 위치는 runs/<run-id>/input/dependency_plan.json. 설치 여부 판정은 kit 전용 .venv 기준이며, 설치 승인은 analysis_strategy checkpoint의 명시 옵션 선택으로만 기록된다(approval.answer_id ↔ checkpoint_answers.json). 설치 전 plan과 설치 후 install_result를 같은 파일에 기록한다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "environment",
+    "required_extras",
+    "installed",
+    "missing",
+    "approval",
+    "install_result"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": ["data-insight-kit.dependency_plan.v1"]
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "environment": {
+      "type": "object",
+      "required": ["kit_root", "venv_path", "basis"],
+      "properties": {
+        "kit_root": { "type": "string", "minLength": 1 },
+        "venv_path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "판정·설치 대상인 kit 전용 .venv 경로. 전역/워크스페이스 환경 금지."
+        },
+        "basis": {
+          "const": "kit_local_venv",
+          "description": "판정 기준 환경 식별자. 다른 환경의 설치는 무시한다."
+        },
+        "python": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "required_extras": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["stats", "ml"] },
+      "uniqueItems": true,
+      "description": "method_route.dependency_groups에서 도출된 필요 extra."
+    },
+    "installed": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["stats", "ml"] },
+      "uniqueItems": true,
+      "description": "kit .venv에 이미 사용 가능한 extra (already_installed). 설치 승인은 생략하되 route 승인은 동일하게 받는다."
+    },
+    "missing": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["stats", "ml"] },
+      "uniqueItems": true,
+      "description": "설치 승인이 필요한 extra."
+    },
+    "packages": {
+      "type": "array",
+      "description": "extra별 개별 패키지 판정 상세 (진단용).",
+      "items": {
+        "type": "object",
+        "required": ["extra", "name", "installed"],
+        "properties": {
+          "extra": { "type": "string", "enum": ["stats", "ml"] },
+          "name": { "type": "string", "minLength": 1 },
+          "installed": { "type": "boolean" },
+          "version": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "allowlist_ref": {
+      "type": "string",
+      "description": "허용 패키지의 단일 원천 (기본: methods/method_registry.json + kit pyproject extras)."
+    },
+    "approval": {
+      "type": ["object", "null"],
+      "description": "null이면 아직 미승인. 설치 승인은 명시 옵션 선택만 인정하고 free-text는 기록하지 않는다.",
+      "required": ["answer_id", "checkpoint_id", "dependency_decision", "approved_at"],
+      "properties": {
+        "answer_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "checkpoint_answers.json의 해당 답변 answer_id."
+        },
+        "checkpoint_id": { "const": "analysis_strategy" },
+        "dependency_decision": {
+          "type": "string",
+          "enum": ["install", "skip_install", "adjust"]
+        },
+        "approved_at": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "install_result": {
+      "type": ["object", "null"],
+      "description": "null이면 아직 설치 시도 없음.",
+      "required": ["status", "extras", "completed_at"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["success", "failed", "skipped"]
+        },
+        "extras": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["stats", "ml"] },
+          "uniqueItems": true
+        },
+        "command": { "type": "string" },
+        "completed_at": { "type": "string", "minLength": 1 },
+        "error": { "type": ["string", "null"] },
+        "fallback_route": {
+          "type": ["string", "null"],
+          "description": "설치 실패로 강등된 경우의 대체 route."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

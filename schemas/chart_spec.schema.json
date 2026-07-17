@@ -4,41 +4,585 @@
   "title": "chart_spec",
   "description": "범용 표 데이터에서 질문, 분석법, 실행 가능한 계산, 차트 선택, 최종 dashboard_data 매핑을 잇는 중간 계약.",
   "type": "object",
-  "required": ["meta", "semantic_profile_ref", "charts"],
+  "required": [
+    "meta",
+    "semantic_profile_ref",
+    "charts"
+  ],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "quality_contract"
+        ],
+        "properties": {
+          "quality_contract": {
+            "required": [
+              "version"
+            ],
+            "properties": {
+              "version": {
+                "const": "v5.1"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "charts": {
+            "items": {
+              "required": [
+                "visual_contract"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["run_id", "generated_at", "mode", "audience"],
+      "required": [
+        "run_id",
+        "generated_at",
+        "mode",
+        "audience"
+      ],
       "additionalProperties": false,
       "properties": {
-        "run_id": { "type": "string" },
-        "generated_at": { "type": "string", "format": "date-time" },
-        "mode": { "enum": ["directed", "exploratory"] },
-        "audience": { "enum": ["executive", "analyst", "operator", "mixed"] },
-        "domain": { "type": ["string", "null"] }
+        "run_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mode": {
+          "enum": [
+            "directed",
+            "exploratory"
+          ]
+        },
+        "audience": {
+          "enum": [
+            "executive",
+            "analyst",
+            "operator",
+            "mixed"
+          ]
+        },
+        "domain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "semantic_profile_ref": {
       "type": "string",
       "description": "outputs/01_profile.md 또는 별도 semantic profile 산출물 경로."
     },
+    "quality_contract": {
+      "$ref": "#/$defs/qualityContract"
+    },
     "dashboard_story": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "properties": {
-        "headline": { "type": "string" },
-        "decision": { "type": "string" },
-        "caveat": { "type": "string" }
+        "headline": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "caveat": {
+          "type": "string"
+        }
+      }
+    },
+    "dashboard_design": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "User-approved dashboard presentation profile from the storyboard checkpoint.",
+      "properties": {
+        "selected_profile": {
+          "enum": [
+            "executive_brief",
+            "analyst_workspace",
+            "operations_monitor"
+          ]
+        },
+        "density": {
+          "enum": [
+            "relaxed",
+            "standard",
+            "compact"
+          ]
+        },
+        "navigation": {
+          "enum": [
+            "tabs",
+            "sidebar",
+            "none"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "alternatives_considered": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "profile",
+              "tradeoff"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "profile": {
+                "enum": [
+                  "executive_brief",
+                  "analyst_workspace",
+                  "operations_monitor"
+                ]
+              },
+              "tradeoff": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "contract_version": {
+          "enum": [
+            "v4",
+            "v5"
+          ],
+          "description": "표현 계약 선언 — dashboard_data.meta.dashboard_profile_contract와 일치해야 함. v5는 승인된 dashboard_layout.json이 추가로 필요함 (QA)."
+        }
       }
     },
     "charts": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/chartPlan" }
+      "items": {
+        "$ref": "#/$defs/chartPlan"
+      }
     }
   },
   "$defs": {
+    "qualityContract": {
+      "type": "object",
+      "required": [
+        "version",
+        "decision_brief",
+        "metrics"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": "v5.1"
+        },
+        "decision_brief": {
+          "$ref": "#/$defs/decisionBrief"
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/metricDefinition"
+          }
+        }
+      }
+    },
+    "decisionBrief": {
+      "type": "object",
+      "required": [
+        "decision_id",
+        "primary_audience",
+        "decision",
+        "review_cadence",
+        "primary_question",
+        "source_scope",
+        "freshness_anchor",
+        "known_gaps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primary_audience": {
+          "enum": [
+            "executive",
+            "analyst",
+            "operator",
+            "mixed"
+          ]
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_cadence": {
+          "enum": [
+            "one_off",
+            "periodic",
+            "continuous"
+          ]
+        },
+        "primary_question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "freshness_anchor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "known_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "metricDefinition": {
+      "type": "object",
+      "required": [
+        "metric_id",
+        "role",
+        "decision_link",
+        "definition",
+        "unit",
+        "denominator",
+        "window",
+        "source_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "metric_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "hero",
+            "diagnostic",
+            "guardrail",
+            "detail"
+          ]
+        },
+        "decision_link": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "denominator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "window": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "visualContract": {
+      "type": "object",
+      "required": [
+        "comparison_intent",
+        "family",
+        "variant",
+        "data_sufficiency",
+        "scale_policy",
+        "label_strategy",
+        "legend_strategy",
+        "palette_policy",
+        "non_color_channels",
+        "mobile_strategy",
+        "copy_context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "comparison_intent": {
+          "enum": [
+            "status",
+            "movement",
+            "ranking",
+            "composition",
+            "distribution",
+            "relationship",
+            "exception",
+            "progression"
+          ]
+        },
+        "family": {
+          "enum": [
+            "trend",
+            "comparison",
+            "composition",
+            "distribution",
+            "relationship",
+            "matrix",
+            "decomposition"
+          ]
+        },
+        "variant": {
+          "$ref": "#/$defs/chartType"
+        },
+        "data_sufficiency": {
+          "$ref": "#/$defs/dataSufficiency"
+        },
+        "scale_policy": {
+          "enum": [
+            "zero_baseline",
+            "shared_scale",
+            "independent_panels",
+            "indexed_baseline",
+            "focused_range_with_cue",
+            "not_applicable"
+          ]
+        },
+        "label_strategy": {
+          "enum": [
+            "direct",
+            "axis",
+            "legend",
+            "tooltip",
+            "mixed"
+          ]
+        },
+        "legend_strategy": {
+          "enum": [
+            "none",
+            "direct_labels",
+            "top",
+            "right",
+            "bottom",
+            "paginated"
+          ]
+        },
+        "palette_policy": {
+          "$ref": "#/$defs/palettePolicy"
+        },
+        "non_color_channels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "label",
+              "shape",
+              "line_style",
+              "open_fill",
+              "panel",
+              "order"
+            ]
+          }
+        },
+        "mobile_strategy": {
+          "enum": [
+            "reflow",
+            "stack_panels",
+            "direct_labels",
+            "paginated_legend",
+            "top_n_with_detail",
+            "table_fallback"
+          ]
+        },
+        "copy_context": {
+          "$ref": "#/$defs/copyContext"
+        }
+      }
+    },
+    "dataSufficiency": {
+      "type": "object",
+      "required": [
+        "status",
+        "observed_points",
+        "observed_series",
+        "minimum_points",
+        "minimum_series",
+        "fallback_chart",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "sufficient",
+            "fallback_required",
+            "not_applicable"
+          ]
+        },
+        "observed_points": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_series": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_distinct_x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_distinct_y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_x_categories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_y_categories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cell_density": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "minimum_points": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimum_series": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fallback_chart": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/chartType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "palettePolicy": {
+      "type": "object",
+      "required": [
+        "mode",
+        "max_color_roots",
+        "rationale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "single_measure",
+            "semantic_highlight",
+            "categorical_identity",
+            "sequential",
+            "diverging",
+            "neutral"
+          ]
+        },
+        "max_color_roots": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "midpoint": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "copyContext": {
+      "type": "object",
+      "required": [
+        "title_mode",
+        "scope_label",
+        "metric_label",
+        "comparison_period",
+        "unit_label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title_mode": {
+          "enum": [
+            "conclusion",
+            "descriptive"
+          ]
+        },
+        "scope_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "comparison_period": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit_label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "chartType": {
+      "enum": [
+        "line",
+        "area",
+        "bar",
+        "stacked_bar",
+        "histogram",
+        "scatter",
+        "heatmap",
+        "boxplot",
+        "waterfall",
+        "slope"
+      ]
+    },
     "chartPlan": {
       "type": "object",
       "required": [
@@ -79,44 +623,110 @@
         },
         "grain": {
           "type": "object",
-          "required": ["row_meaning", "time_grain", "entity_grain"],
+          "required": [
+            "row_meaning",
+            "time_grain",
+            "entity_grain"
+          ],
           "additionalProperties": false,
           "properties": {
-            "row_meaning": { "type": "string" },
-            "time_grain": { "type": ["string", "null"] },
-            "entity_grain": { "type": ["string", "null"] }
+            "row_meaning": {
+              "type": "string"
+            },
+            "time_grain": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "entity_grain": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
         "data_requirements": {
           "type": "object",
-          "required": ["measures", "dimensions", "time_columns"],
+          "required": [
+            "measures",
+            "dimensions",
+            "time_columns"
+          ],
           "additionalProperties": false,
           "properties": {
-            "measures": { "type": "array", "items": { "type": "string" } },
-            "dimensions": { "type": "array", "items": { "type": "string" } },
-            "time_columns": { "type": "array", "items": { "type": "string" } },
-            "filters": { "type": "array", "items": { "type": "string" } },
-            "sample_policy": { "type": ["string", "null"] }
+            "measures": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dimensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "time_columns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "filters": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sample_policy": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
         "calculation": {
           "type": "object",
-          "required": ["source_ref", "sql", "metric_definition", "unit", "denominator"],
+          "required": [
+            "source_ref",
+            "sql",
+            "metric_definition",
+            "unit",
+            "denominator"
+          ],
           "additionalProperties": false,
           "properties": {
-            "source_ref": { "type": "string" },
+            "source_ref": {
+              "type": "string"
+            },
             "sql": {
               "type": "string",
               "description": "재실행 가능한 단일 SELECT/WITH SQL 또는 파일 입력이면 동등한 Polars/DuckDB 계산 설명."
             },
-            "metric_definition": { "type": "string" },
-            "unit": { "type": "string" },
-            "denominator": { "type": ["string", "null"] }
+            "metric_definition": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "denominator": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
         "chart": {
           "type": "object",
-          "required": ["type", "why_this_chart", "encoding"],
+          "required": [
+            "type",
+            "why_this_chart",
+            "encoding"
+          ],
           "additionalProperties": false,
           "properties": {
             "type": {
@@ -133,25 +743,59 @@
                 "slope"
               ]
             },
-            "why_this_chart": { "type": "string" },
+            "why_this_chart": {
+              "type": "string"
+            },
             "encoding": {
               "type": "object",
-              "required": ["x", "y"],
+              "required": [
+                "x",
+                "y"
+              ],
               "additionalProperties": {
-                "type": ["string", "number", "boolean", "array", "object", "null"]
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "array",
+                  "object",
+                  "null"
+                ]
               },
               "properties": {
-                "x": { "type": "string" },
-                "y": { "type": "string" },
-                "color": { "type": ["string", "null"] },
-                "size": { "type": ["string", "null"] },
-                "series": { "type": ["string", "null"] }
+                "x": {
+                  "type": "string"
+                },
+                "y": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "size": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "series": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
               }
             }
           }
         },
         "chart_recommendation": {
-          "type": ["object", "null"],
+          "type": [
+            "object",
+            "null"
+          ],
           "description": "User-facing explanation of why this data should use this chart, with alternatives considered.",
           "additionalProperties": false,
           "properties": {
@@ -172,34 +816,120 @@
               "description": "Why this chart best answers the question."
             },
             "alternative_chart": {
-              "type": ["string", "null"],
+              "type": [
+                "string",
+                "null"
+              ],
               "description": "Alternative chart considered, if any."
             },
             "alternative_tradeoff": {
-              "type": ["string", "null"],
+              "type": [
+                "string",
+                "null"
+              ],
               "description": "Why the alternative was not chosen or when it may be preferable."
             }
           }
         },
+        "visual_contract": {
+          "$ref": "#/$defs/visualContract"
+        },
         "insight": {
           "type": "object",
-          "required": ["finding", "evidence", "limit"],
+          "required": [
+            "finding",
+            "evidence",
+            "limit"
+          ],
           "additionalProperties": false,
           "properties": {
-            "finding": { "type": "string" },
-            "evidence": { "type": "string" },
-            "limit": { "type": "string" }
+            "finding": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "string"
+            }
           }
         },
         "dashboard_mapping": {
           "type": "object",
-          "required": ["panel_id", "chart_id", "priority"],
+          "required": [
+            "panel_id",
+            "chart_id",
+            "priority"
+          ],
           "additionalProperties": false,
           "properties": {
-            "panel_id": { "type": "string" },
-            "chart_id": { "type": "string" },
-            "priority": { "type": "integer", "minimum": 1 },
-            "uses_kpi_ids": { "type": "array", "items": { "type": "string" } }
+            "panel_id": {
+              "type": "string"
+            },
+            "chart_id": {
+              "type": "string"
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uses_kpi_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "surface": {
+              "enum": [
+                "primary",
+                "detail",
+                "appendix"
+              ]
+            },
+            "small_multiple_group": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "table_treatment": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "cell_gradient": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "required": [
+                    "value_column_indices",
+                    "scale"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "value_column_indices": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "scale": {
+                      "enum": [
+                        "column",
+                        "table"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

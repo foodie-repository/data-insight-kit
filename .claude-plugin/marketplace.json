@@ -4,18 +4,17 @@
     "name": "foodie"
   },
   "metadata": {
-    "description": "파일·API 스냅샷·원격 Parquet·선택 DuckDB를 받아 사용자 확인 checkpoint를 거쳐 데이터 주입형 대시보드와 보고서를 생성하는 범용 AI 분석 키트. Claude Code·Codex 양쪽 지원.",
-    "version": "0.1.0"
+    "description": "공유 core와 사용자 checkpoint, v5.1 시각 품질 QA를 사용하는 data-insight-kit의 Claude Code marketplace."
   },
   "plugins": [
     {
       "name": "data-insight-kit",
-      "description": "8개 stage + 4개 사용자 확인 checkpoint + 데이터 주입형 대시보드 렌더러 + 강제 QA. 이 디렉터리 자체가 플러그인(source: .).",
-      "version": "0.1.0",
+      "description": "공유 run-pipeline skill + 결정적 checkpoint hook + standalone 대시보드 renderer/QA.",
       "author": {
         "name": "foodie"
       },
-      "source": "."
+      "source": "./",
+      "strict": true
     }
   ]
 }

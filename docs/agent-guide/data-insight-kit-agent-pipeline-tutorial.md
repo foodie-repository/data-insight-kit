@@ -1,21 +1,30 @@
 # data-insight-kit 에이전트 파이프라인 튜토리얼
 
-이 문서는 `data-insight-kit`의 에이전트 역할과 파이프라인 흐름을 설명하는 교육용 튜토리얼이다. 발표용 요약은 [data-insight-kit-agent-pipeline.slides.md](data-insight-kit-agent-pipeline.slides.md)에 있다.
+이 문서는 `data-insight-kit`의 에이전트 역할과 파이프라인 흐름을 설명하는
+구조 안내서다. 발표용 요약은
+[data-insight-kit-agent-pipeline.slides.md](data-insight-kit-agent-pipeline.slides.md)에
+있다.
 
-## 문서 위치 권장
+## 문서 위치
 
-교육 자료는 `data-insight-kit` 루트에 바로 두기보다 `data-insight-kit/docs/teaching/` 아래에 두는 것이 좋다.
+에이전트 구조 설명 자료는 `data-insight-kit` 루트에 바로 두기보다
+`data-insight-kit/docs/agent-guide/` 아래에 둔다.
 
 이유는 세 가지다.
 
-1. `data-insight-kit/docs/`에는 이미 `pipeline-contract.md`, `model-tier-map.md` 같은 설계 문서가 있다. 교육 자료도 문서 계층 안에 있어야 찾기 쉽다.
-2. 루트에는 `README.md`, `AGENTS.md`, `schemas/`, `connectors/`, `qa/`, `templates/`처럼 실행과 배포에 직접 필요한 파일이 있다. 발표 자료를 루트에 두면 키트의 실행 표면이 흐려진다.
-3. 나중에 강의용 슬라이드, 실습 안내, 데모 시나리오, 강사용 스크립트를 추가할 수 있으므로 `docs/teaching/`이라는 별도 폴더가 확장에 유리하다.
+1. `data-insight-kit/docs/`에는 이미 `pipeline-contract.md`, `model-tier-map.md`
+   같은 기준 문서가 있다. 에이전트 구조 설명도 같은 문서 계층 안에 있어야
+   찾기 쉽다.
+2. 루트에는 `README.md`, `AGENTS.md`, `schemas/`, `connectors/`, `qa/`,
+   `templates/`처럼 실행과 배포에 직접 필요한 파일이 있다. 구조 설명 자료를
+   루트에 두면 키트의 실행 표면이 흐려진다.
+3. 나중에 역할별 설명, 발표용 슬라이드, 데모 시나리오를 추가할 수 있으므로
+   `docs/agent-guide/`라는 별도 폴더가 확장에 유리하다.
 
-현재 추천 구조:
+현재 구조:
 
 ```text
-data-insight-kit/docs/teaching/
+data-insight-kit/docs/agent-guide/
 ├── data-insight-kit-agent-pipeline.slides.md
 └── data-insight-kit-agent-pipeline-tutorial.md
 ```

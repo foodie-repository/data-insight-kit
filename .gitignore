@@ -13,3 +13,10 @@ connectors/.env
 # Python
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# 로컬 브라우저 QA와 운영체제 메타데이터
+.playwright-cli/
+.DS_Store

@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Insight Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, Pretendard, system-ui, -apple-system, sans-serif;
+      --ink: #111827;
+      --muted: #667085;
+      --line: #e4e7ec;
+      --surface: #ffffff;
+      --canvas: #f4f6f8;
+      --accent: #3157d5;
+      --positive: #087e6b;
+      --negative: #b42318;
+      --warning: #a15c00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+    }
+    button, select { font: inherit; }
+    button:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(49, 87, 213, .28);
+      outline-offset: 2px;
+    }
+    #dashboard-root {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      width: min(100%, 1720px);
+      margin: 0 auto;
+      padding: 28px;
+    }
+    #dashboard-root[data-gap="sm"] { gap: 12px; }
+    #dashboard-root[data-gap="lg"] { gap: 24px; }
+    #dashboard-root[data-max-width="standard"] { max-width: 1180px; }
+    #dashboard-root[data-max-width="full"] { width: 100%; max-width: none; }
+    .dashboard-component {
+      grid-column-end: span var(--desktop-span);
+      order: var(--desktop-order);
+      min-width: 0;
+      min-height: 156px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    }
+    .dashboard-component[data-role="hero"] {
+      border-color: #cbd5f5;
+      box-shadow: 0 8px 24px rgba(49, 87, 213, .08);
+    }
+    .dashboard-component[data-kind="header"] {
+      min-height: 0;
+      padding: 24px 26px;
+      border: 0;
+      background: #182230;
+      color: #fff;
+    }
+    .component-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+    .dashboard-component[data-kind="header"] .component-title {
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: -.025em;
+    }
+    .component-desc, .component-meta, .source-meta, .kpi-note, .kpi-unit {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .dashboard-component[data-kind="header"] .component-meta { color: #d0d5dd; }
+    .header-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .kpi-card { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+    .kpi-label { margin: 0; color: var(--muted); font-size: 13px; font-weight: 650; }
+    .kpi-value { margin: 8px 0 0; color: var(--ink); font-size: 30px; font-weight: 760; letter-spacing: -.03em; }
+    .kpi-unit { margin-top: 2px; font-size: 12px; }
+    .kpi-comparison { display: inline-block; margin-top: 8px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .kpi-comparison[data-status="good"] { color: var(--positive); }
+    .kpi-comparison[data-status="bad"] { color: var(--negative); }
+    .sparkline { display: block; width: 100%; height: 34px; margin-top: 8px; }
+    .chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .chart-host { width: 100%; height: 320px; margin-top: 8px; }
+    .chart-fallback-table { display: none; }
+    .chart-fallback-table table { min-width: 0; table-layout: fixed; }
+    .chart-fallback-table th, .chart-fallback-table td {
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    .height-sm .chart-host { height: 220px; }
+    .height-md .chart-host { height: 280px; }
+    .height-lg .chart-host { height: 360px; }
+    .height-xl .chart-host { height: 440px; }
+    .story-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .story-cell { padding: 12px; border-radius: 10px; background: #f8f9fb; }
+    .story-label { margin: 0; color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .06em; }
+    .story-value { margin: 6px 0 2px; font-weight: 720; }
+    .story-desc { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .source-list { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .source-item { padding-top: 10px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+    .source-ref { margin: 0 0 4px; font-weight: 650; }
+    .dashboard-component[data-kind="source_note"] {
+      min-height: 0;
+      padding: 10px 4px 0;
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .dashboard-component[data-kind="source_note"] .component-title {
+      margin: 0;
+      font-size: 12px;
+    }
+    .dashboard-component[data-kind="source_note"] .source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin-top: 5px;
+    }
+    .dashboard-component[data-kind="source_note"] .source-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      padding: 0;
+      border: 0;
+    }
+    .dashboard-component[data-kind="source_note"] .source-ref { margin: 0; }
+    .table-scroll { max-width: 100%; overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { background: #f8f9fb; color: #344054; font-weight: 700; }
+    .control-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-top: 12px; }
+    .control-field { display: grid; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .control-field select, .reset-button {
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 1px solid #cfd4dc;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+    }
+    .reset-button { cursor: pointer; font-weight: 700; }
+    .control-status { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+    @media (min-width: 841px) {
+      .dashboard-component[data-kind="insight"][data-role="support"] {
+        display: flex;
+        flex-direction: column;
+      }
+      .dashboard-component[data-kind="insight"][data-role="support"] .story-grid {
+        flex: 1;
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(0, 1fr);
+      }
+    }
+    @media (max-width: 720px) {
+      #dashboard-root { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
+      .dashboard-component {
+        grid-column: 1 / -1 !important;
+        order: var(--mobile-order);
+        padding: 16px;
+      }
+      .dashboard-component[data-kind="source_note"] { padding: 10px 2px 0; }
+      .dashboard-component[data-kind="kpi_group"] .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .story-grid { grid-template-columns: 1fr; }
+      .height-xl .chart-host, .height-lg .chart-host { height: 340px; }
+    }
+    @media (max-width: 840px) {
+      #dashboard-root[data-quality-contract="v5.1"] {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 12px;
+      }
+      #dashboard-root[data-quality-contract="v5.1"] .dashboard-component {
+        grid-column: 1 / -1 !important;
+        order: var(--mobile-order);
+      }
+    }
+    @media (max-width: 360px) {
+      #dashboard-root[data-quality-contract="v5.1"] { padding: 8px; gap: 10px; }
+      #dashboard-root[data-quality-contract="v5.1"] .dashboard-component {
+        padding: 12px;
+        border-radius: 12px;
+      }
+      #dashboard-root[data-quality-contract="v5.1"]
+        .dashboard-component[data-kind="header"] { padding: 18px; }
+      #dashboard-root[data-quality-contract="v5.1"]
+        .dashboard-component[data-kind="kpi_group"] .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      #dashboard-root[data-quality-contract="v5.1"] .height-xl .chart-host,
+      #dashboard-root[data-quality-contract="v5.1"] .height-lg .chart-host {
+        height: 300px;
+      }
+      #dashboard-root[data-quality-contract="v5.1"]
+        [data-fallback-active="true"] .chart-host { display: none; }
+      #dashboard-root[data-quality-contract="v5.1"]
+        [data-fallback-active="true"] .chart-fallback-table,
+      #dashboard-root[data-quality-contract="v5.1"]
+        [data-mobile-strategy="top_n_with_detail"] .chart-fallback-table {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="dashboard-root" aria-label="데이터 인사이트 대시보드"></main>
+  <script>
+const LAYOUT = {PLACE_LAYOUT_HERE};
+const DATA = {PLACE_DATA_HERE};
+const OPTIONS_BY_COMPONENT = {PLACE_OPTIONS_HERE};
+const PRESENTATION_BY_COMPONENT = {PLACE_PRESENTATION_HERE};
+  </script>
+  <script>
+{PLACE_ECHARTS_BUNDLE_HERE}
+  </script>
+  <script>
+  (() => {
+    "use strict";
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const root = document.getElementById("dashboard-root");
+    document.documentElement.dataset.layoutRevision = String(LAYOUT.revision);
+    root.dataset.gap = LAYOUT.grid.gap;
+    root.dataset.maxWidth = LAYOUT.grid.max_width;
+    if (LAYOUT.quality_contract_version) {
+      root.dataset.qualityContract = LAYOUT.quality_contract_version;
+    }
+    document.title = DATA.meta.title;
+
+    const components = [...LAYOUT.components].sort(
+      (a, b) => a.placement.desktop.order - b.placement.desktop.order
+    );
+    const kpis = new Map(DATA.kpis.map(kpi => [kpi.id, kpi]));
+    const panels = new Map(DATA.panels.map(panel => [panel.id, panel]));
+    const sources = new Map(DATA.sources.map(source => [source.id, source]));
+    const charts = new Map(
+      DATA.panels.flatMap(panel => panel.charts.map(chart => [chart.id, chart]))
+    );
+    const componentByChart = new Map(
+      components.filter(item => item.kind === "chart").map(item => [item.data_refs[0], item.id])
+    );
+    const controlBindings = [];
+    window.__DIK_ECHARTS__ = {};
+
+    function addText(parent, tag, text, className) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      node.textContent = text == null ? "" : String(text);
+      parent.appendChild(node);
+      return node;
+    }
+
+    function titleFor(el, component, text, level = "h2") {
+      const heading = addText(el, level, text, "component-title");
+      heading.id = `${component.id}-title`;
+      el.setAttribute("aria-labelledby", heading.id);
+      return heading;
+    }
+
+    function formatNumber(value, precision) {
+      if (typeof value !== "number") return String(value);
+      return new Intl.NumberFormat(DATA.meta.locale || "ko-KR", {
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision,
+      }).format(value);
+    }
+
+    function decimalPrecision(value) {
+      if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+      const text = String(value);
+      if (!text.includes(".") || /e/i.test(text)) return 0;
+      return Math.min(6, text.replace(/0+$/, "").split(".")[1].length);
+    }
+
+    function formatDisplayValue(value, numeric = false, precision = null) {
+      if (value === null || value === undefined) return "—";
+      if (!numeric || typeof value !== "number" || !Number.isFinite(value)) {
+        return String(value);
+      }
+      const digits = Number.isInteger(precision) ? precision : decimalPrecision(value);
+      return formatNumber(value, digits);
+    }
+
+    function applyCanonicalNumberFormatting(option) {
+      if (!option || typeof option !== "object") return option;
+      if (option.tooltip && option.tooltip.show !== false) {
+        option.tooltip.valueFormatter = value => Array.isArray(value)
+          ? value.map(item => formatDisplayValue(item, typeof item === "number")).join(", ")
+          : formatDisplayValue(value, typeof value === "number");
+      }
+      const axes = [option.xAxis, option.yAxis]
+        .flatMap(axis => Array.isArray(axis) ? axis : [axis])
+        .filter(Boolean);
+      for (const axis of axes) {
+        if (axis.type === "value") {
+          axis.axisLabel = {...(axis.axisLabel || {})};
+          axis.axisLabel.formatter = value => formatDisplayValue(value, true);
+        }
+      }
+      return option;
+    }
+
+    function renderSparkline(parent, trend) {
+      if (!trend || !Array.isArray(trend.points) || trend.points.length < 2) return;
+      const width = 180;
+      const height = 34;
+      const min = Math.min(...trend.points);
+      const max = Math.max(...trend.points);
+      const range = max - min || 1;
+      const points = trend.points.map((value, index) => {
+        const x = index * width / (trend.points.length - 1);
+        const y = height - 3 - ((value - min) / range) * (height - 6);
+        return `${x},${y}`;
+      }).join(" ");
+      const svg = document.createElementNS(SVG_NS, "svg");
+      svg.classList.add("sparkline");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", trend.period_label || "KPI 추세");
+      const line = document.createElementNS(SVG_NS, "polyline");
+      line.setAttribute("points", points);
+      line.setAttribute("fill", "none");
+      line.setAttribute("stroke", "#3157d5");
+      line.setAttribute("stroke-width", "2.5");
+      svg.appendChild(line);
+      parent.appendChild(svg);
+    }
+
+    function renderHeader(el, component) {
+      titleFor(el, component, DATA.meta.title, "h1");
+      const meta = document.createElement("div");
+      meta.className = "header-meta";
+      const items = [
+        DATA.meta.period ? `분석 기준 ${DATA.meta.period}` : null,
+        DATA.meta.row_count == null ? null : `총 ${formatNumber(DATA.meta.row_count, 0)}개`,
+        DATA.meta.domain ? `분석 범위 ${DATA.meta.domain}` : null,
+      ].filter(Boolean);
+      for (const item of items) addText(meta, "span", item, "component-meta");
+      el.appendChild(meta);
+    }
+
+    function formatKpiComparison(kpi) {
+      const comparison = kpi.comparison;
+      if (!comparison) return "";
+      const basis = comparison.basis || "비교";
+      if (comparison.kind === "period_delta") {
+        const sign = comparison.direction === "up" ? "+"
+          : comparison.direction === "down" ? "-" : "";
+        return `${basis} ${sign}${formatNumber(Math.abs(comparison.delta), 1)}%`;
+      }
+      const precision = kpi.format && Number.isInteger(kpi.format.precision)
+        ? kpi.format.precision : 0;
+      return `${basis} ${formatNumber(comparison.delta, precision)}${kpi.unit || ""}`;
+    }
+
+    function renderKpis(el, component) {
+      titleFor(el, component, "핵심 지표");
+      const grid = document.createElement("div");
+      grid.className = "kpi-grid";
+      for (const ref of component.data_refs) {
+        const kpi = kpis.get(ref);
+        if (!kpi) continue;
+        const card = document.createElement("article");
+        card.className = "kpi-card";
+        card.dataset.kpiId = kpi.id;
+        addText(card, "p", kpi.label, "kpi-label");
+        const precision = kpi.format && Number.isInteger(kpi.format.precision)
+          ? kpi.format.precision : 0;
+        addText(card, "p", formatNumber(kpi.value, precision), "kpi-value");
+        if (kpi.unit) addText(card, "p", `(단위: ${kpi.unit})`, "kpi-unit");
+        if (kpi.comparison) {
+          const comparison = addText(
+            card,
+            "p",
+            formatKpiComparison(kpi),
+            "kpi-comparison"
+          );
+          comparison.dataset.direction = kpi.comparison.direction || "flat";
+          comparison.dataset.status = kpi.status || "neutral";
+        }
+        if (kpi.note) addText(card, "p", kpi.note, "kpi-note");
+        renderSparkline(card, kpi.trend);
+        grid.appendChild(card);
+      }
+      el.appendChild(grid);
+    }
+
+    function chartUnitSummary(chart) {
+      const encoding = chart.encoding || {};
+      const units = new Set();
+      for (const series of encoding.series || []) if (series.unit) units.add(series.unit);
+      for (const axis of [encoding.x, encoding.y, encoding.value]) {
+        if (axis && axis.unit) units.add(axis.unit);
+      }
+      return units.size ? `(단위: ${[...units].join(", ")})` : "";
+    }
+
+    function chartDataSummary(chart) {
+      const encoding = chart.encoding || {};
+      if (encoding.x && Array.isArray(encoding.x.values) && Array.isArray(encoding.series)) {
+        return encoding.series.map(series => encoding.x.values.map(
+          (label, index) => `${label}: ${formatDisplayValue(
+            series.values[index],
+            typeof series.values[index] === "number",
+            series.format && series.format.precision,
+          )}${series.unit || ""}`
+        ).join(", ")).join("; ");
+      }
+      if (Array.isArray(encoding.points)) {
+        return encoding.points.map(point => `x ${formatDisplayValue(point.x, true)}, y ${formatDisplayValue(point.y, true)}`).join("; ");
+      }
+      if (Array.isArray(encoding.bins)) {
+        return encoding.bins.map(bin => `${formatDisplayValue(bin.range[0], true)}–${formatDisplayValue(bin.range[1], true)}: ${formatDisplayValue(bin.count, true)}`).join(", ");
+      }
+      if (Array.isArray(encoding.boxes)) {
+        return encoding.boxes.map(box => `${box.label}: 중앙값 ${formatDisplayValue(box.median, true)}`).join(", ");
+      }
+      if (Array.isArray(encoding.steps)) {
+        return encoding.steps.map(step => `${step.label}: ${formatDisplayValue(step.value, true)}`).join(", ");
+      }
+      return chart.title;
+    }
+
+    function chartTableData(chart) {
+      const encoding = chart && chart.encoding ? chart.encoding : {};
+      if (encoding.x && Array.isArray(encoding.x.values) && Array.isArray(encoding.series)) {
+        return {
+          columns: [encoding.x.label || "항목", ...encoding.series.map(item => item.label || "값")],
+          rows: encoding.x.values.map((label, index) => [
+            label,
+            ...encoding.series.map(item => item.values ? item.values[index] : null),
+          ]),
+          numericColumns: [false, ...encoding.series.map(() => true)],
+          precisions: [null, ...encoding.series.map(item => item.format && item.format.precision)],
+        };
+      }
+      if (Array.isArray(encoding.points)) {
+        return {
+          columns: [encoding.x && encoding.x.label || "x", encoding.y && encoding.y.label || "y"],
+          rows: encoding.points.map(item => [item.x, item.y]),
+          numericColumns: [true, true],
+          precisions: [encoding.x && encoding.x.format && encoding.x.format.precision, encoding.y && encoding.y.format && encoding.y.format.precision],
+        };
+      }
+      if (Array.isArray(encoding.cells)) {
+        return {
+          columns: [encoding.x && encoding.x.label || "x", encoding.y && encoding.y.label || "y", encoding.value && encoding.value.label || "값"],
+          rows: encoding.cells.map(item => [item.x, item.y, item.value]),
+          numericColumns: [false, false, true],
+          precisions: [null, null, encoding.value && encoding.value.format && encoding.value.format.precision],
+        };
+      }
+      if (Array.isArray(encoding.bins)) {
+        return {
+          columns: ["구간", "빈도"],
+          rows: encoding.bins.map(item => [`${formatDisplayValue(item.range[0], true)}–${formatDisplayValue(item.range[1], true)}`, item.count]),
+          numericColumns: [false, true],
+          precisions: [null, 0],
+        };
+      }
+      if (Array.isArray(encoding.boxes)) {
+        return {
+          columns: ["그룹", "최소", "1사분위", "중앙값", "3사분위", "최대"],
+          rows: encoding.boxes.map(item => [item.label, item.min, item.q1, item.median, item.q3, item.max]),
+          numericColumns: [false, true, true, true, true, true],
+          precisions: [null, null, null, null, null, null],
+        };
+      }
+      if (Array.isArray(encoding.steps)) {
+        return {
+          columns: ["단계", "값"],
+          rows: encoding.steps.map(item => [item.label, item.value]),
+          numericColumns: [false, true],
+          precisions: [null, null],
+        };
+      }
+      if (Array.isArray(encoding.series) && encoding.x && encoding.x.start_label) {
+        return {
+          columns: ["계열", encoding.x.start_label, encoding.x.end_label],
+          rows: encoding.series.map(item => [item.label, item.start, item.end]),
+          numericColumns: [false, true, true],
+          precisions: [null, null, null],
+        };
+      }
+      return null;
+    }
+
+    function appendChartFallbackTable(el, chart, mobileStrategy) {
+      if (!["table_fallback", "top_n_with_detail"].includes(mobileStrategy)) return;
+      const tableData = chartTableData(chart);
+      if (!tableData || !tableData.rows.length) return;
+      const wrap = document.createElement("div");
+      wrap.className = "chart-fallback-table table-scroll";
+      const table = document.createElement("table");
+      table.setAttribute("aria-label", `${chart.title} 세부 수치`);
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      for (const column of tableData.columns) addText(headRow, "th", column, "");
+      for (const th of headRow.children) th.scope = "col";
+      thead.appendChild(headRow);
+      const tbody = document.createElement("tbody");
+      for (const row of tableData.rows) {
+        const tr = document.createElement("tr");
+        row.forEach((value, index) => addText(
+          tr,
+          "td",
+          formatDisplayValue(
+            value,
+            Boolean(tableData.numericColumns && tableData.numericColumns[index]),
+            tableData.precisions && tableData.precisions[index],
+          ),
+          "",
+        ));
+        tbody.appendChild(tr);
+      }
+      table.append(thead, tbody);
+      wrap.appendChild(table);
+      el.appendChild(wrap);
+    }
+
+    function bindMobileFallback(el, instance, mobileStrategy) {
+      if (mobileStrategy !== "table_fallback") return;
+      const media = window.matchMedia("(max-width: 360px)");
+      const update = () => {
+        el.dataset.fallbackActive = media.matches ? "true" : "false";
+        if (!media.matches) requestAnimationFrame(() => instance.resize());
+      };
+      update();
+      if (typeof media.addEventListener === "function") {
+        media.addEventListener("change", update);
+      } else {
+        media.addListener(update);
+      }
+    }
+
+    function hasVisibleValue(value) {
+      return value !== null && value !== undefined && String(value).trim() !== "";
+    }
+
+    function chartHasData(chart) {
+      if (!chart) return false;
+      const encoding = chart.encoding || {};
+      if (Array.isArray(encoding.series)) {
+        return encoding.series.some(series =>
+          (series.values || []).some(hasVisibleValue)
+          || hasVisibleValue(series.start)
+          || hasVisibleValue(series.end)
+        );
+      }
+      return [encoding.points, encoding.cells, encoding.bins, encoding.boxes, encoding.steps]
+        .some(items => Array.isArray(items) && items.length > 0);
+    }
+
+    function componentHasData(component) {
+      if (component.kind === "kpi_group") {
+        return component.data_refs.some(ref => {
+          const kpi = kpis.get(ref);
+          return kpi && hasVisibleValue(kpi.value);
+        });
+      }
+      if (component.kind === "chart") return chartHasData(charts.get(component.data_refs[0]));
+      if (component.kind === "insight") {
+        const panel = panels.get(component.data_refs[0]);
+        return panel && panel.story && Object.values(panel.story).some(item =>
+          item && (hasVisibleValue(item.value) || hasVisibleValue(item.desc))
+        );
+      }
+      if (component.kind === "table") {
+        const panel = panels.get(component.data_refs[0]);
+        return Boolean(panel && panel.table && panel.table.rows && panel.table.rows.length);
+      }
+      return true;
+    }
+
+    function renderChart(el, component) {
+      const chart = charts.get(component.data_refs[0]);
+      const presentation = PRESENTATION_BY_COMPONENT[component.id] || {};
+      titleFor(el, component, chart ? chart.title : component.id);
+      if (chart && chart.desc) addText(el, "p", chart.desc, "component-desc");
+      const unit = chart ? chartUnitSummary(chart) : "";
+      const visibleCopy = chart ? `${chart.title || ""} ${chart.desc || ""}` : "";
+      if (unit && !visibleCopy.includes("단위")) {
+        addText(el, "p", unit, "component-meta");
+      }
+      const summary = addText(el, "p", chart ? chartDataSummary(chart) : component.id, "sr-only");
+      summary.id = `${component.id}-data-summary`;
+      const node = document.createElement("div");
+      node.className = "chart-host";
+      node.setAttribute("role", "img");
+      node.setAttribute("aria-label", chart ? chart.title : component.id);
+      node.setAttribute("aria-describedby", summary.id);
+      el.appendChild(node);
+      appendChartFallbackTable(el, chart, presentation.mobile_strategy);
+      root.appendChild(el);
+      const instance = echarts.init(node, null, {renderer: "canvas"});
+      instance.setOption(applyCanonicalNumberFormatting(OPTIONS_BY_COMPONENT[component.id]));
+      bindMobileFallback(el, instance, presentation.mobile_strategy);
+      window.__DIK_ECHARTS__[component.id] = instance;
+    }
+
+    function renderInsight(el, component) {
+      const panel = panels.get(component.data_refs[0]);
+      titleFor(el, component, panel ? panel.title : "핵심 해석");
+      const grid = document.createElement("div");
+      grid.className = "story-grid";
+      const labels = {now: "현재", why: "배경", so: "해석", act: "확인 기준"};
+      for (const key of ["now", "why", "so", "act"]) {
+        const story = panel && panel.story ? panel.story[key] : null;
+        if (!story) continue;
+        const cell = document.createElement("article");
+        cell.className = "story-cell";
+        addText(cell, "p", labels[key], "story-label");
+        addText(cell, "p", story.value, "story-value");
+        addText(cell, "p", story.desc, "story-desc");
+        grid.appendChild(cell);
+      }
+      el.appendChild(grid);
+    }
+
+    function renderTable(el, component) {
+      const panel = panels.get(component.data_refs[0]);
+      titleFor(el, component, "비교에 사용한 세부 수치");
+      const wrap = document.createElement("div");
+      wrap.className = "table-scroll";
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      for (const column of (panel && panel.table ? panel.table.columns : [])) {
+        const th = document.createElement("th");
+        th.scope = "col";
+        th.textContent = column.unit ? `${column.name} (${column.unit})` : column.name;
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow);
+      const tbody = document.createElement("tbody");
+      const columns = panel && panel.table ? panel.table.columns || [] : [];
+      for (const row of (panel && panel.table ? panel.table.rows : [])) {
+        const tr = document.createElement("tr");
+        row.forEach((value, index) => {
+          const column = columns[index] || {};
+          addText(
+            tr,
+            "td",
+            formatDisplayValue(value, column.type === "number", column.format && column.format.precision),
+            "",
+          );
+        });
+        tbody.appendChild(tr);
+      }
+      table.append(thead, tbody);
+      wrap.appendChild(table);
+      el.appendChild(wrap);
+    }
+
+    function renderSources(el, component) {
+      titleFor(el, component, "출처");
+      const list = document.createElement("ul");
+      list.className = "source-list";
+      for (const ref of component.data_refs) {
+        const source = sources.get(ref);
+        if (!source) continue;
+        const item = document.createElement("li");
+        item.className = "source-item";
+        const sourceRef = addText(
+          item,
+          "p",
+          source.ref.split(/[\\/]/).at(-1),
+          "source-ref"
+        );
+        sourceRef.title = source.ref;
+        const policy = source.sample_policy.sampled
+          ? `표본 ${formatNumber(source.sample_policy.n, 0)}개 · ${source.sample_policy.method || "방법 미기재"}`
+          : `전체 데이터 ${formatNumber(source.sample_policy.n, 0)}개`;
+        addText(item, "p", `기준일 ${source.snapshot_at.slice(0, 10)} · ${policy}`, "source-meta");
+        list.appendChild(item);
+      }
+      el.appendChild(list);
+    }
+
+    function renderControls(el, component) {
+      titleFor(el, component, "보기 제어");
+      const row = document.createElement("div");
+      row.className = "control-row";
+      const status = document.createElement("p");
+      status.className = "control-status";
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      const state = {filter: "전체", legend: "전체 계열", zoom: "전체 범위"};
+      const updateStatus = () => {
+        status.textContent = `${state.filter} · ${state.legend} · ${state.zoom}`;
+      };
+      let select = null;
+      if (component.interactions.includes("local_filter")) {
+        const field = document.createElement("label");
+        field.className = "control-field";
+        addText(field, "span", "항목", "");
+        select = document.createElement("select");
+        select.setAttribute("aria-label", "로컬 항목 필터");
+        const all = document.createElement("option");
+        all.value = "__all__";
+        all.textContent = "전체";
+        select.appendChild(all);
+        const chart = charts.get(component.data_refs[0]);
+        const categories = chart && chart.encoding && chart.encoding.x
+          ? chart.encoding.x.values || [] : [];
+        for (const category of categories) {
+          const option = document.createElement("option");
+          option.value = String(category);
+          option.textContent = String(category);
+          select.appendChild(option);
+        }
+        field.appendChild(select);
+        row.appendChild(field);
+      }
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.className = "reset-button";
+      reset.textContent = "보기 초기화";
+      row.appendChild(reset);
+      el.append(row, status);
+      updateStatus();
+      controlBindings.push({component, state, status, updateStatus, select, reset});
+    }
+
+    for (const component of components) {
+      if (
+        LAYOUT.quality_contract_version === "v5.1"
+        && component.empty_behavior === "hide"
+        && !componentHasData(component)
+      ) continue;
+      const el = document.createElement("section");
+      const presentation = PRESENTATION_BY_COMPONENT[component.id] || {};
+      el.className = `dashboard-component height-${component.placement.desktop.height}`;
+      el.dataset.componentId = component.id;
+      el.dataset.renderer = component.renderer;
+      el.dataset.dataRef = component.data_refs.join(",");
+      el.dataset.kind = component.kind;
+      el.dataset.role = component.role;
+      if (presentation.mobile_strategy) {
+        el.dataset.mobileStrategy = presentation.mobile_strategy;
+      }
+      el.style.setProperty("--desktop-order", component.placement.desktop.order);
+      el.style.setProperty("--mobile-order", component.placement.mobile.order);
+      el.style.setProperty("--desktop-span", component.placement.desktop.span);
+      el.style.gridColumnEnd = `span ${component.placement.desktop.span}`;
+      if (component.placement.desktop.column_start) {
+        el.style.gridColumnStart = String(component.placement.desktop.column_start);
+      }
+
+      if (component.kind === "header") renderHeader(el, component);
+      else if (component.kind === "kpi_group") renderKpis(el, component);
+      else if (component.kind === "chart") renderChart(el, component);
+      else if (component.kind === "insight") renderInsight(el, component);
+      else if (component.kind === "table") renderTable(el, component);
+      else if (component.kind === "source_note") renderSources(el, component);
+      else if (component.kind === "control_bar") renderControls(el, component);
+
+      if (component.kind !== "chart") root.appendChild(el);
+    }
+
+    for (const binding of controlBindings) {
+      const targetInstances = binding.component.data_refs.map(chartId => {
+        const componentId = componentByChart.get(chartId);
+        return componentId ? window.__DIK_ECHARTS__[componentId] : null;
+      }).filter(Boolean);
+
+      for (const instance of targetInstances) {
+        const updateLegendState = event => {
+          const selected = Object.values(event.selected || {}).filter(Boolean).length;
+          const total = Object.keys(event.selected || {}).length;
+          binding.state.legend = total && selected < total ? `계열 ${selected}/${total}` : "전체 계열";
+          binding.updateStatus();
+        };
+        instance.on("legendselectchanged", updateLegendState);
+        instance.on("legendselected", updateLegendState);
+        instance.on("legendunselected", updateLegendState);
+        instance.on("datazoom", () => {
+          if (binding.state.filter === "전체") binding.state.zoom = "확대 보기";
+          binding.updateStatus();
+        });
+      }
+
+      if (binding.select) {
+        binding.select.addEventListener("change", () => {
+          const value = binding.select.value;
+          binding.state.filter = value === "__all__" ? "전체" : value;
+          binding.state.zoom = value === "__all__" ? "전체 범위" : "선택 항목";
+          for (const instance of targetInstances) {
+            if (value === "__all__") instance.dispatchAction({type: "dataZoom", start: 0, end: 100});
+            else instance.dispatchAction({type: "dataZoom", startValue: value, endValue: value});
+          }
+          binding.updateStatus();
+        });
+      }
+
+      binding.reset.addEventListener("click", () => {
+        for (const instance of targetInstances) {
+          instance.dispatchAction({type: "legendAllSelect"});
+          instance.dispatchAction({type: "dataZoom", start: 0, end: 100});
+        }
+        if (binding.select) binding.select.value = "__all__";
+        binding.state.filter = "전체";
+        binding.state.legend = "전체 계열";
+        binding.state.zoom = "전체 범위";
+        binding.updateStatus();
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      for (const instance of Object.values(window.__DIK_ECHARTS__)) instance.resize();
+    });
+  })();
+  </script>
+</body>
+</html>

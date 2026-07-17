@@ -20,6 +20,18 @@ model: claude-haiku-4-5
    ```bash
    python qa/validate.py runs/<run-id>/outputs/dashboard_data.json --chart-spec runs/<run-id>/outputs/chart_spec.json --no-render --post-communicate
    ```
+   v5 계약은 layout 인자를 명시한다.
+   ```bash
+   python qa/validate.py runs/<run-id>/outputs/dashboard_data.json \
+     --chart-spec runs/<run-id>/outputs/chart_spec.json \
+     --layout runs/<run-id>/outputs/dashboard_layout.json
+   ```
+   v5 검사는 `static contract → compiler manifest → desktop/mobile browser →
+   screenshot` 순서다. 하나라도 실패하면 legacy/v4 renderer로 강등하지 않는다.
+   실행 후 `outputs/qa_render_desktop.png`와
+   `outputs/qa_render_mobile.png`를 에이전트가 직접 열어 차트 blank, 겹침, 잘림,
+   과도한 여백, mobile reading order를 눈으로 확인하고 관찰 결과를 보고한다.
+   두 이미지를 보지 않은 상태에서는 dashboard 정지점을 사용자에게 전달하지 않는다.
 2. 결과를 `manifest.json#qa` 에 기록: `{block, warn, blocked_reason}`.
 3. 분기(계약: 제한된 자동교정 1회 후 에스컬레이션):
    - **BLOCK 0** → 통과, report_outline checkpoint로.
@@ -50,7 +62,12 @@ model: claude-haiku-4-5
    - `dashboard_data.json`: 차트 title/desc가 chart_spec의 insight를 독자 언어로 옮겨야 한다. 차트 설명이 짧거나 수치 근거가 빠지면 WARN으로 보고한다.
    - `deep_report.md`: `04_analysis.md`의 단순 복사본이 아니어야 하며, 의사결정 질문·방법론·KPI·세그먼트/분포/관계/추세·반대 해석·한계·실행 시나리오·추가 분석·chart_spec/source_ref 부록을 포함해야 한다.
    - `summary_report.md`: deep report와 역할이 흐려질 정도로 길거나 방법론 부록을 반복하면 WARN으로 보고한다.
-8. 기본 입력 데이터만으로 뒷받침하기 어려운 추천, 원인 확정, 성과 확정, 미래 결과 단정 표현이 있으면 분석적 BLOCK 또는 사용자 보고 대상으로 분류한다. 외부 context가 있다면 해당 표현이 어떤 metric layer와 source_ref로 뒷받침되는지 확인한다. 일부 보조 데이터만 있는 경우에는 그 보조 데이터가 직접 지원하는 판단까지만 허용한다. domain pack이 제공한 금지 표현이 결론 문장에 나타나면 BLOCK한다.
+8. 대시보드 디자인 프로필이 실제 화면 구성과 맞는지 확인한다.
+   - `executive_brief`: KPI와 첫 핵심 차트가 없거나 차트/표가 과밀하면 WARN으로 보고하고 요약형으로 축소하도록 visualize에 되돌린다.
+   - `analyst_workspace`: 차트·표가 너무 적거나 진단형 차트(히트맵, 산점도, 분포, 예외 표)가 없으면 WARN으로 보고한다.
+   - `operations_monitor`: 전 기간 대비, 시간/상태 변화, 반복 지표가 없으면 WARN으로 보고한다.
+   - 최종 visible dashboard에 내부 프로필 코드나 라벨(`executive_brief`, `요약 보고서형` 등)이 보이면 BLOCK으로 본다.
+9. 기본 입력 데이터만으로 뒷받침하기 어려운 추천, 원인 확정, 성과 확정, 미래 결과 단정 표현이 있으면 분석적 BLOCK 또는 사용자 보고 대상으로 분류한다. 외부 context가 있다면 해당 표현이 어떤 metric layer와 source_ref로 뒷받침되는지 확인한다. 일부 보조 데이터만 있는 경우에는 그 보조 데이터가 직접 지원하는 판단까지만 허용한다. domain pack이 제공한 금지 표현이 결론 문장에 나타나면 BLOCK한다.
 
 ## 원칙
 - 통과 못 하면 출고하지 않는다. 무한 자동수정 금지(1회).

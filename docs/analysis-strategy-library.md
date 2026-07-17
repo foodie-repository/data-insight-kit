@@ -105,6 +105,53 @@ adapter가 없으면 "확정 판단"이 아니라 "현재 데이터에서 보이
 - 차트 후보: bar, heatmap, histogram, evidence table.
 - 주의: 의미 분석 모델이 없으면 감성·의도 추론을 확정하지 않는다.
 
+## 분석 깊이 route (expert-guided analysis routing v1)
+
+전략(무엇을 볼 것인가)과 별개로, frame은 분석 깊이 route(어디까지 말할 것인가)를
+`outputs/method_route.json`에 확정한다. 단일 원천은
+`docs/specs/expert-guided-analysis-routing.md` §5와 `methods/method_registry.json`이며,
+여기서는 frame이 참조할 요약만 둔다. 사용자에게는 내부 route명 대신 사용자 표현을 쓴다.
+
+| route | 사용자 표현 | 조건 (spec §5.2) | 대표 method (registry) | 금지 결론 |
+|---|---|---|---|---|
+| `descriptive` | 기본 현황 분석 | 단순 현황 파악 목적 | ranking, distribution, composition, trend | 원인 단정, 성과·추천 확정 |
+| `diagnostic` | 차이·예외 진단 분석 | 세그먼트 차이·예외·병목·후보 선별 목적 | quality + core 조합 | 원인 단정, 책임 귀속 |
+| `statistical` | 통계적 확인 분석 | 타당한 비교군 + 수치형 결과 + 표본 조건 | group_difference / correlation / simple_regression / confidence_interval candidate | 인과 단정, 효과 크기·우열 확정 |
+| `ml_exploratory` | 패턴·군집 탐색 분석 | 라벨 없는 패턴·군집·이상치 탐색 + 도메인 검토 가능 | clustering / anomaly / dimensionality_reduction candidate | 군집 명명 확정, 부정·오류 확정, 세그먼트 전략 확정 |
+| `predictive` | 예측 후보 분석 | 예측 타깃 + 시간 기준 + 검증 구조 + 누수 방지 기준 | v1 전용 method 없음 (downgrade-only) | 미래 확정 예측, 검증 없는 예측 자동화 |
+| `causal_experiment` | 전후·실험 비교 분석 | 처리군/대조군 + 전후 기간 + 교란요인 검토 가능 | v1 전용 method 없음 (downgrade-only) | 인과 효과 확정, 조치 효과 단정 |
+
+route별 핵심 한계:
+
+- `descriptive`/`diagnostic`: core method만 사용하며 추가 설치가 없다. 구조와 예외를
+  보여주되 "왜"는 후보 수준으로만 남긴다.
+- `statistical`: p-value·상관계수는 "우연 가능성"의 표현이지 원인·효과의 증거가
+  아니다. 효과크기·신뢰구간을 p-value보다 앞에 둔다. 표본 단위 독립성
+  (`independent_sampling_unit`)을 method 전제로 확인한다.
+- `ml_exploratory`: 군집·이상치는 탐색 후보다. 도메인 검토
+  (`domain_review_available`) 없이 세그먼트 전략이나 부정·오류 판정으로 승격하지
+  않는다.
+- `predictive`: 타깃 정의, 검증 기간, 미래 정보 누수 금지 기준이
+  `data_condition_evidence`에 없으면 QA가 BLOCK한다. v1 registry에 전용 method가
+  없으므로 후보 판정과 필요한 검증 구조 기록까지만 하고 강등한다.
+- `causal_experiment`: 처리군/대조군·전후 기간이 불명확하면 인과 표현
+  ("~때문에", "효과가 있었다")을 쓰지 않는다. v1에서는 downgrade-only다.
+
+### Route 강등 규칙 (spec §5.3 요약)
+
+다음이면 심화 route를 낮춘다: 비교군이 업무적으로 타당하지 않음 / 표본이 작거나
+독립적이지 않음 / 분모·단위·기준 기간 없음 / 예측 타깃·검증 기간 없음 / 누수
+가능성 배제 불가 / 처리군·대조군 불명확 / 도메인 전문가가 KPI·코드값을 확정하지
+못함 / dependency 설치 미승인·실패.
+
+- 강등은 `method_route.json`에 `downgraded_from`, `downgrade_reason`,
+  `allowed_scope`를 기록하는 것으로 허용된다 (재승인 불필요).
+- 승인 이후의 route **상향**은 `analysis_strategy` 재승인이 필요하다. stage guard와
+  QA가 승인 시점 sha256 잠금으로 이를 강제한다.
+- 설치 미승인/실패 강등의 기본 목적지는 core-only route다: 남은 method 중
+  diagnostic이 있으면 `diagnostic`, 아니면 `descriptive`
+  (`dependency_preflight.py --apply-approval`의 결정적 규칙).
+
 ## 심층 분석 체크리스트
 
 `report.depth=deep` 또는 의사결정형 분석에서는 다음을 최소 기준으로 한다.

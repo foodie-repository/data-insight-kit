@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "확인 단계 게이트 검사",
+            "timeout": 30,
+            "command": "python3 \"${PLUGIN_ROOT}/scripts/dik_checkpoint_hook.py\" 2>/dev/null || python3 \"$(git rev-parse --show-toplevel 2>/dev/null)/data-insight-kit/scripts/dik_checkpoint_hook.py\" 2>/dev/null || python3 \"$(git rev-parse --show-toplevel 2>/dev/null)/scripts/dik_checkpoint_hook.py\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,6 +6,7 @@
   "required": [
     "schema_version",
     "run_id",
+    "created_at",
     "status",
     "checkpoint_id",
     "checkpoint_kind",
@@ -26,12 +27,19 @@
     "schema_version": {
       "enum": [
         "data-insight-kit.checkpoint_question.v1",
-        "visualize-kit.checkpoint_question.v1"
+        "visualize-kit.checkpoint_question.v1",
+        "data-insight-kit.checkpoint_question.v2",
+        "visualize-kit.checkpoint_question.v2"
       ]
     },
     "run_id": {
       "type": "string",
       "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UTC timestamp when the checkpoint question artifact was created. Used to verify that answers were recorded after the question was shown."
     },
     "status": {
       "const": "blocked_for_user_checkpoint"
@@ -41,6 +49,7 @@
       "enum": [
         "data_profile",
         "analysis_strategy",
+        "analysis_result_review",
         "dashboard_storyboard",
         "report_outline"
       ]
@@ -50,9 +59,20 @@
       "enum": [
         "data_review",
         "strategy_review",
+        "result_review",
         "storyboard_review",
         "report_review"
       ]
+    },
+    "approval_targets": {
+      "type": "object",
+      "description": "승인 시점 잠금: 이 질문이 승인 대상으로 삼는 산출물의 sha256. analysis_strategy는 method_route/dependency_plan을, dashboard_storyboard는 dashboard_layout을 잠근다. 승인 후 변경은 재승인 필요.",
+      "properties": {
+        "method_route": { "$ref": "#/$defs/approval_target" },
+        "dependency_plan": { "$ref": "#/$defs/approval_target" },
+        "dashboard_layout": { "$ref": "#/$defs/layout_approval_target" }
+      },
+      "additionalProperties": false
     },
     "header": {
       "type": "string",
@@ -170,6 +190,21 @@
       "minLength": 1,
       "description": "Ready-to-post chat prompt formatted as 현재 이해 / 막힌 결정 / 추천 답안 / 질문."
     },
+    "dashboard_design_profiles": {
+      "type": "object",
+      "description": "dashboard_storyboard에서 비교해 보여주는 v5 화면 프로필 설명.",
+      "required": [
+        "executive_brief",
+        "analyst_workspace",
+        "operations_monitor"
+      ],
+      "properties": {
+        "executive_brief": { "$ref": "#/$defs/dashboard_design_profile" },
+        "analyst_workspace": { "$ref": "#/$defs/dashboard_design_profile" },
+        "operations_monitor": { "$ref": "#/$defs/dashboard_design_profile" }
+      },
+      "additionalProperties": false
+    },
     "options": {
       "type": "array",
       "minItems": 2,
@@ -208,7 +243,27 @@
             "additionalProperties": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "maps_to": {
+                  "type": "object",
+                  "required": ["loop_action"]
+                }
+              },
+              "required": ["maps_to"]
+            },
+            "then": {
+              "properties": {
+                "continue_pipeline": {
+                  "const": false
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "allow_free_text": {
@@ -240,6 +295,148 @@
         "additionalProperties": false
       }
     },
+    "interview_loop": {
+      "type": "object",
+      "description": "인터뷰 루프 상태 (interview-loop-v2 spec §4.2). 라운드 상한과 자유 질문 상태를 담고, round=2면 prior_round가 필수다.",
+      "required": [
+        "round",
+        "max_rounds",
+        "free_question_used_this_round",
+        "max_free_questions_per_round",
+        "finalization_rule"
+      ],
+      "properties": {
+        "round": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "max_rounds": {
+          "const": 2
+        },
+        "free_question_used_this_round": {
+          "type": "boolean",
+          "description": "현재 라운드 기준 파생 표시값. 판정은 답변 레코드(interview_round + loop_action) 집계가 기준이다."
+        },
+        "max_free_questions_per_round": {
+          "const": 1
+        },
+        "prior_round": {
+          "$ref": "#/$defs/prior_round"
+        },
+        "finalization_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "round": {
+                "const": 2
+              }
+            },
+            "required": ["round"]
+          },
+          "then": {
+            "required": ["prior_round"]
+          }
+        }
+      ]
+    },
+    "companion_questions": {
+      "type": "array",
+      "maxItems": 2,
+      "description": "정보 수집용 보조 질문 (spec §4.2, §8). 진행을 결정하지 않는다 — 옵션 스키마에 continue_pipeline 자체가 없다(불변식 I1).",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "header"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "header": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "label",
+                "description"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 96
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "recommended": {
+                  "type": "boolean"
+                },
+                "maps_to": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "allow_free_text": {
+            "type": "boolean"
+          },
+          "maps_to": {
+            "type": "object",
+            "description": "domain_field 등 답변 누적 대상 매핑 (spec §8).",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exploration": {
+      "type": "object",
+      "description": "data_profile 라운드 1 전용 (spec §5.1, §6.1): 탐색 방향 후보 참조와 자유 질문 슬롯.",
+      "required": [
+        "candidates_ref",
+        "free_question_slot"
+      ],
+      "properties": {
+        "candidates_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "free_question_slot": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
     "response_instructions": {
       "type": "object",
       "required": [
@@ -265,6 +462,11 @@
         "resume_command": {
           "type": "string",
           "minLength": 1
+        },
+        "free_question_command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "라운드당 1개 허용되는 사용자 직접 질문을 기록하는 명령 (interview-loop-v2 D2/D3)."
         },
         "revision_rule": {
           "type": "string"
@@ -292,5 +494,107 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "enum": [
+              "data-insight-kit.checkpoint_question.v2",
+              "visualize-kit.checkpoint_question.v2"
+            ]
+          }
+        },
+        "required": ["schema_version"]
+      },
+      "then": {
+        "required": ["interview_loop"]
+      }
+    }
+  ],
+  "$defs": {
+    "dashboard_design_profile": {
+      "type": "object",
+      "required": [
+        "label",
+        "best_for",
+        "layout",
+        "tradeoff"
+      ],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "best_for": { "type": "string", "minLength": 1 },
+        "layout": { "type": "string", "minLength": 1 },
+        "tradeoff": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "prior_round": {
+      "type": "object",
+      "required": [
+        "question_path",
+        "question_sha256",
+        "answer_id",
+        "trigger"
+      ],
+      "properties": {
+        "question_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "answer_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trigger": {
+          "enum": [
+            "explore_direction",
+            "free_question",
+            "domain_readiness_gap",
+            "artifact_revision"
+          ]
+        },
+        "mini_result_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "approval_target": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "created_at": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "layout_approval_target": {
+      "type": "object",
+      "required": ["path", "sha256", "revision"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "revision": { "type": "integer", "minimum": 1 },
+        "created_at": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
 }

@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://data-insight-kit/schemas/dashboard_layout.schema.json",
+  "title": "dashboard_layout",
+  "description": "Dashboard freeform v5 approved component layout contract.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "layout_version",
+    "revision",
+    "generated_at",
+    "profile_purpose",
+    "design_rationale",
+    "grid",
+    "components"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "quality_contract_version"
+        ],
+        "properties": {
+          "quality_contract_version": {
+            "const": "v5.1"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "items": {
+              "required": [
+                "purpose",
+                "decision_link",
+                "evidence_refs",
+                "empty_behavior"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "data-insight-kit.dashboard_layout.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "layout_version": {
+      "const": 5
+    },
+    "quality_contract_version": {
+      "const": "v5.1"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profile_purpose": {
+      "enum": [
+        "executive_brief",
+        "analyst_workspace",
+        "operations_monitor"
+      ]
+    },
+    "design_rationale": {
+      "$ref": "#/$defs/designRationale"
+    },
+    "grid": {
+      "$ref": "#/$defs/grid"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    }
+  },
+  "$defs": {
+    "designRationale": {
+      "type": "object",
+      "required": [
+        "primary_question",
+        "hierarchy_reason",
+        "mobile_reading_order_reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "primary_question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hierarchy_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mobile_reading_order_reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "grid": {
+      "type": "object",
+      "required": [
+        "columns",
+        "gap",
+        "max_width"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "const": 12
+        },
+        "gap": {
+          "enum": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        },
+        "max_width": {
+          "enum": [
+            "standard",
+            "wide",
+            "full"
+          ]
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "role",
+        "renderer",
+        "data_refs",
+        "placement",
+        "interactions",
+        "render_options"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "kind": {
+          "enum": [
+            "header",
+            "control_bar",
+            "kpi_group",
+            "chart",
+            "insight",
+            "table",
+            "source_note"
+          ]
+        },
+        "role": {
+          "enum": [
+            "navigation",
+            "summary",
+            "hero",
+            "primary",
+            "support",
+            "evidence"
+          ]
+        },
+        "purpose": {
+          "enum": [
+            "context",
+            "summary",
+            "primary_evidence",
+            "comparison",
+            "diagnostic",
+            "guardrail",
+            "detail",
+            "provenance",
+            "interaction"
+          ]
+        },
+        "decision_link": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "empty_behavior": {
+          "enum": [
+            "hide",
+            "block"
+          ]
+        },
+        "renderer": {
+          "enum": [
+            "echarts",
+            "svg_css"
+          ]
+        },
+        "data_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "placement": {
+          "$ref": "#/$defs/placement"
+        },
+        "interactions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "tooltip",
+              "legend_toggle",
+              "data_zoom",
+              "local_filter",
+              "reset"
+            ]
+          }
+        },
+        "render_options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "orientation": {
+              "enum": [
+                "auto",
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "legend": {
+              "enum": [
+                "top",
+                "right",
+                "bottom",
+                "none"
+              ]
+            },
+            "label_density": {
+              "enum": [
+                "relaxed",
+                "standard",
+                "compact"
+              ]
+            },
+            "series_layout": {
+              "enum": [
+                "overlay",
+                "stacked_panels"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "required": [
+        "desktop",
+        "mobile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "desktop": {
+          "$ref": "#/$defs/desktopPlacement"
+        },
+        "mobile": {
+          "$ref": "#/$defs/mobilePlacement"
+        }
+      }
+    },
+    "desktopPlacement": {
+      "type": "object",
+      "required": [
+        "order",
+        "span",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column_start": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "height": {
+          "$ref": "#/$defs/height"
+        }
+      }
+    },
+    "mobilePlacement": {
+      "type": "object",
+      "required": [
+        "order",
+        "span",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "span": {
+          "const": 12
+        },
+        "height": {
+          "$ref": "#/$defs/height"
+        }
+      }
+    },
+    "height": {
+      "enum": [
+        "sm",
+        "md",
+        "lg",
+        "xl",
+        "auto"
+      ]
+    }
+  }
+}

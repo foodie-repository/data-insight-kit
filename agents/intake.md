@@ -11,6 +11,10 @@ model: claude-haiku-4-5
 "이 분석이 누구를 위해 무엇에 답하는가"를 먼저 못박는다. 이게 흔들리면 이후 전 단계가 엉뚱한 질문에 답한다.
 
 ## 작업
+0. `runs/<run-id>/input/run_context.json` 이 있으면 먼저 읽고 이후 판단에 반영한다.
+   - 기본 `mode: fresh_analysis`에서는 기존 `runs/*` 산출물, 이전 `dashboard_data.json`, 이전 `chart_spec.json`, 이전 보고서를 입력·근거·문구로 사용하지 않는다.
+   - 사용자가 기존 결과 수정·비교·이어받기를 명시한 경우에만 `allow_prior_run_reference: true`를 인정하고, 참조한 run은 `reference_runs[]`에 남겨야 한다.
+   - 새 스레드나 새 run에서 같은 데이터를 다시 분석하는 요청은 기본적으로 새 분석으로 본다.
 1. `runs/<run-id>/intake.yaml` 가 있으면 그대로 읽어 사용(non-interactive).
    - 보고서 옵션은 `report.depth`, `report.audience`, `report.evidence_scope`로 분리한다.
    - 없으면 기본값은 `{depth: "standard", audience: "mixed", evidence_scope: "data_only"}`.
@@ -39,7 +43,7 @@ model: claude-haiku-4-5
 질문 파일과 markdown은 `docs/user-facing-planning.md`를 따른다. 먼저 사용자용 분석 기획안을 쓰고, 기술 실행 정보는 뒤로 보낸다.
 `answerable_questions`에는 사용자가 데이터로 답을 얻고 싶은 업무 질문만 넣는다. "단순 Top-N을 넘어서려면 어떤 차트 흐름이 적합한가요?", "QA를 통과하려면 무엇이 필요한가요?"처럼 에이전트의 품질 기준이나 내부 실행 점검에 가까운 항목은 사용자용 질문으로 쓰지 않는다.
 사용자용 문장에서는 `data_profile`, `analysis_strategy`, `dashboard_storyboard`, `report_outline`, `checkpoint`, `storyboard`, `standard + mixed + data_only`, `deep + mixed + data_only`, `source_ref`, `chart_spec` 같은 내부 계약명을 피하고, 각각 "데이터 확인 단계", "분석 방향 확인 단계", "대시보드 구성안 확인 단계", "보고서 구성안 확인 단계", "중간 확인", "대시보드 구성안", "요약 보고서, 데이터 근거만 사용", "요약 보고서와 심층 검토 보고서, 데이터 근거만 사용"처럼 풀어 쓴다.
-사용자용 기획안에는 내부 스키마명, 내부 지표명, 과도하게 단정적인 후보 표현, "이전 계획은 취소"처럼 대화 이력을 설명하는 문장을 쓰지 않는다. 승인 질문은 시스템 동작 설명이 아니라 사용자가 바로 고를 수 있는 선택 질문으로 쓴다.
+사용자용 기획안에는 내부 스키마명, 내부 지표명, 과도하게 단정적인 후보 표현, "이전 계획은 취소"처럼 대화 이력을 설명하는 문장을 쓰지 않는다. 첫 승인 전에는 "선택된 방향"이 아니라 "추천 방향" 또는 "우선 제안하는 방향"이라고 쓴다. 분모나 보조 맥락이 없는 단순 건수 데이터에는 "리스크 진단", "위험도", "안전도"를 기본 표현으로 쓰지 않는다. 승인 질문은 시스템 동작 설명이 아니라 사용자가 바로 고를 수 있는 선택 질문으로 쓴다.
 
 ```text
 사용자용 분석 기획안:
@@ -78,7 +82,7 @@ C. <탐색 선택지>
     "analysis_goal": "데이터를 분석하기 전에 결과물로 어떤 판단을 돕고 싶은지 확인합니다.",
     "answerable_questions": [
       "어떤 후보나 영역을 비교해야 하나요?",
-      "현황·리스크·기회 중 무엇을 우선 봐야 하나요?"
+      "분포·집중도·예외 중 무엇을 우선 봐야 하나요?"
     ],
     "data_can_support": [
       "입력 데이터에 들어 있는 범위, 기간, 컬럼으로 직접 계산 가능한 지표"
@@ -93,8 +97,8 @@ C. <탐색 선택지>
         "recommended": true
       },
       {
-        "label": "현황·리스크 진단",
-        "description": "현재 분포, 집중도, 이상치를 보고 개선 포인트를 찾습니다."
+        "label": "분포·집중도 진단",
+        "description": "현재 구조, 집중 구간, 예외적으로 두드러지는 대상을 확인합니다."
       }
     ],
     "checkpoint_plan": [
@@ -117,7 +121,7 @@ C. <탐색 선택지>
         "description": "지역, 기간, 범주, 고객군 같은 분석 범위를 먼저 조정합니다."
       }
     ],
-    "approval_question": "먼저 이번 분석 결과로 무엇을 판단할지 선택해도 될까요?"
+    "approval_question": "추천 방향으로 데이터 확인 단계부터 시작할까요, 아니면 목적·범위를 바꿀까요?"
   },
   "current_understanding": "사용자는 <데이터/도메인>으로 <산출물>을 만들고 싶다.",
   "blocked_decision": "깊은 분석을 위해 먼저 <의사결정/분석 모드/성공 기준> 중 하나가 필요하다.",
@@ -135,8 +139,8 @@ C. <탐색 선택지>
     },
     {
       "id": "diagnosis",
-      "label": "현황·리스크 진단",
-      "description": "현재 분포, 집중도, 이상치를 보고 개선 포인트를 찾는다.",
+      "label": "분포·집중도 진단",
+      "description": "현재 구조, 집중 구간, 예외적으로 두드러지는 대상을 확인한다.",
       "maps_to": {
         "analysis_mode": "status_diagnosis"
       }

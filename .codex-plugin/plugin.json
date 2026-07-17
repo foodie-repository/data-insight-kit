@@ -1,0 +1,37 @@
+{
+  "name": "data-insight-kit",
+  "version": "0.2.0",
+  "description": "표 데이터를 계획·사용자 확인·v5.1 시각 품질 QA를 거쳐 standalone dashboard.html과 보고서로 만드는 범용 분석 키트.",
+  "author": {
+    "name": "foodie"
+  },
+  "homepage": "https://github.com/foodie-repository/data-insight-kit",
+  "repository": "https://github.com/foodie-repository/data-insight-kit",
+  "license": "MIT",
+  "keywords": [
+    "data-analysis",
+    "dashboard",
+    "reporting",
+    "visual-quality",
+    "checkpoint"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Data Insight Kit",
+    "shortDescription": "Checkpoint 기반 데이터 분석·대시보드·보고서",
+    "longDescription": "공유 run-pipeline skill과 결정적 checkpoint gate를 사용해 표 데이터를 분석하고, 네 화면 크기의 시각 QA와 눈검토를 거친 standalone 대시보드와 보고서를 만듭니다.",
+    "developerName": "foodie",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/foodie-repository/data-insight-kit",
+    "defaultPrompt": [
+      "이 데이터로 분석 보고서와 대시보드를 만들어줘"
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

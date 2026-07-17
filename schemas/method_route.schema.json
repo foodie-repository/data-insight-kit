@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/data-insight-kit/method_route.schema.json",
+  "title": "data-insight-kit analysis depth route",
+  "description": "frame 단계가 기록하는 분석 깊이 route 계약. canonical 위치는 runs/<run-id>/outputs/method_route.json. route와 method는 methods/method_registry.json에 존재해야 하며(QA 검증), analysis_result_review 발동 술어는 guard/QA가 이 파일의 route와 intake/manifest 필드에서 재계산한다 — review_predicate는 provenance일 뿐 판정 근거가 아니다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "route",
+    "selected_methods"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": ["data-insight-kit.method_route.v1"]
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "route": {
+      "type": "string",
+      "enum": [
+        "descriptive",
+        "diagnostic",
+        "statistical",
+        "ml_exploratory",
+        "predictive",
+        "causal_experiment"
+      ]
+    },
+    "selected_methods": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "methods/method_registry.json의 method id 목록."
+    },
+    "route_rationale": {
+      "type": "string",
+      "description": "이 route를 추천한 근거(사용자 목적·데이터 조건 요약)."
+    },
+    "data_condition_evidence": {
+      "type": "object",
+      "description": "route 조건 판정에 쓴 구조화 근거 (비교군, 표본 수, 분모, 타깃 등).",
+      "additionalProperties": true
+    },
+    "downgraded_from": {
+      "type": ["string", "null"],
+      "enum": [
+        "descriptive",
+        "diagnostic",
+        "statistical",
+        "ml_exploratory",
+        "predictive",
+        "causal_experiment",
+        null
+      ]
+    },
+    "downgrade_reason": { "type": ["string", "null"] },
+    "allowed_scope": {
+      "type": ["string", "null"],
+      "description": "강등 후 허용되는 분석 범위 설명."
+    },
+    "dependency_groups": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["stats", "ml"] },
+      "uniqueItems": true,
+      "description": "selected_methods가 요구하는 extra group 합집합. 단일 원천은 registry."
+    },
+    "review_predicate": {
+      "type": "object",
+      "description": "analysis_result_review 발동 술어의 계산 provenance. guard/QA는 이 값을 신뢰하지 않고 재계산한다.",
+      "required": ["required", "matched_conditions"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "matched_conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "route_requires_review",
+              "domain_mode",
+              "report_depth_deep",
+              "decision_analysis_mode"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
