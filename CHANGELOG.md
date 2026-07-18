@@ -3,6 +3,28 @@
 기록 원칙: expert-guided analysis routing v1부터 단계별 커밋 요약과 검증 결과를 남긴다.
 구현 중단·재개 시 이 파일의 "진행 상태"가 재개 지점이다.
 
+## [0.2.2] — 2026-07-19 — 모델 지정 정책 정비
+
+모델 세대가 바뀌어도 지정값이 조용히 낡지 않도록 양 런타임의 모델 지정 방식을 정비했다.
+기능 변경은 없고, 어떤 모델로 각 단계가 도는지가 바뀐다.
+
+- **Claude — 버전 고정 → 티어 별칭**: `agents/*.md`의 `model:`을 `claude-sonnet-4-6`·
+  `claude-opus-4-8` 같은 고정값에서 `sonnet`/`opus` 별칭으로 바꿨다. sonnet 4.6→5처럼
+  세대가 올라가도 파일 수정 없이 최신이 적용된다. 경량 단계(intake·qa)는 haiku에서
+  **sonnet으로 승격** — 파이프라인 입구(의도 파악)와 출구(BLOCK/PASS 판정)의 품질이
+  전체에 파급되므로 최하위 티어를 쓰지 않는다.
+- **Codex — 현행값 갱신**: 기본 모델 `gpt-5.5` → **`gpt-5.6-sol`**. `codex debug models`
+  실측 결과 gpt-5.5는 priority 7로 밀렸고 sol/terra/luna가 현행(1·2·3)이었다. budget
+  값이던 `gpt-5.4-mini`는 이미 `visibility=hide` 상태여서 "fast and affordable"인
+  **`gpt-5.6-luna`**로 교체했다.
+- **Codex — 지정처 단일화**: Codex에는 Claude의 티어 별칭 같은 버전 없는 식별자가 없어
+  고정이 불가피하다. 대신 모델명 지정처를 `docs/model-tier-map.md`와 wrapper 기본값
+  **두 곳으로 축소**했다. 기존에는 AGENTS.md·agent-guide tutorial·slides까지 5개 파일
+  ~15곳에 복붙돼 있어 세대 교체 때마다 조용히 낡았다. 이제 다른 문서는 effort 배분만
+  적고 모델명은 단일 원천을 참조한다.
+- 검증: wrapper dry-run 실측 `-m gpt-5.6-sol`, `DIK_MODEL` override `-m gpt-5.6-luna`.
+  전체 `369 passed, 30 skipped, 128 subtests passed`, `ruff check .` All checks passed.
+
 ## [0.2.1] — 2026-07-18 — checkpoint gate 무결성 + domain-pack 저작 문서
 
 Codex 교차검증에서 발견해 재현으로 확인한 체크포인트 게이트 우회 2건(High)을

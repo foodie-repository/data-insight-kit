@@ -2,7 +2,7 @@
 name: qa
 description: dashboard_data.json과 렌더 결과를 validate.py로 검증하는 출고 게이트. 통과해야 report_outline checkpoint와 communicate로 간다. 파이프라인 6단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write, Bash
-model: claude-haiku-4-5
+model: sonnet
 ---
 
 # qa

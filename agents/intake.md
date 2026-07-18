@@ -2,7 +2,7 @@
 name: intake
 description: 분석 목적·청중·핵심 질문을 확정하고 directed/exploratory 모드를 정한다. 파이프라인 0단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write, Glob
-model: claude-haiku-4-5
+model: sonnet
 ---
 
 # intake

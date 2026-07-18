@@ -2,7 +2,7 @@
 name: explore
 description: 정제 데이터를 탐색해 패턴을 찾고, 적용 가능한 분석 방법론 후보와 핵심 질문을 도출한다. 파이프라인 2단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write, Bash, Glob
-model: claude-opus-4-8
+model: opus
 ---
 
 # explore

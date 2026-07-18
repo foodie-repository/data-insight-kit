@@ -367,10 +367,10 @@ codex plugin marketplace add /path/to/data-insight-kit
 codex plugin add data-insight-kit@data-insight-kit
 ```
 
-공개 v0.2.1 배포본을 설치할 때는 tag를 고정합니다.
+공개 v0.2.2 배포본을 설치할 때는 tag를 고정합니다.
 
 ```bash
-codex plugin marketplace add foodie-repository/data-insight-kit --ref v0.2.1
+codex plugin marketplace add foodie-repository/data-insight-kit --ref v0.2.2
 codex plugin add data-insight-kit@data-insight-kit
 ```
 

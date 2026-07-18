@@ -2,7 +2,7 @@
 name: visualize
 description: 분석 인사이트를 dashboard_data.json(스키마 준수)으로 만들고 템플릿에 주입해 대시보드 HTML을 생성한다. 파이프라인 5단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write, Bash
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # visualize

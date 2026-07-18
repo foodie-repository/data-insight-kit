@@ -2,7 +2,7 @@
 name: analyze
 description: KPI와 질문을 데이터로 검증하고 General→Specific으로 인사이트·액션을 도출한다. 차트용 수치도 계산한다. 파이프라인 4단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write, Bash, Glob
-model: claude-opus-4-8
+model: opus
 ---
 
 # analyze

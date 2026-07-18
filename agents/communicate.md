@@ -2,7 +2,7 @@
 name: communicate
 description: 분석과 대시보드를 report.depth/audience/evidence_scope 설정에 맞춰 요약 보고서 또는 심층 보고서로 정리한다. 파이프라인 7단계(마지막). 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # communicate

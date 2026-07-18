@@ -6,7 +6,7 @@
 #
 # 사용법:
 #   bash scripts/run_codex_pipeline.sh <run-id> [--dry-run] [--fresh] [--domain-mode] [--guided-intake] [--guided|--auto]
-#   DIK_MODEL 환경변수로 모델 override (기본 gpt-5.5). 기존 VK_MODEL도 호환.
+#   DIK_MODEL 환경변수로 모델 override (기본값은 docs/model-tier-map.md 단일 원천). 기존 VK_MODEL도 호환.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -49,7 +49,7 @@ for a in "$@"; do
   esac
 done
 RUN_ID="${RUN_ID:-run-$(date +%Y%m%d-%H%M%S)}"
-MODEL="${DIK_MODEL:-${VK_MODEL:-gpt-5.5}}"
+MODEL="${DIK_MODEL:-${VK_MODEL:-gpt-5.6-sol}}"
 RUN="runs/$RUN_ID"
 mkdir -p "$RUN/input" "$RUN/intermediate" "$RUN/outputs"
 USER_REQUEST="${DIK_USER_REQUEST:-${VK_USER_REQUEST:-}}"

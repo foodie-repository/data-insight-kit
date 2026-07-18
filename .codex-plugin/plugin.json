@@ -1,6 +1,6 @@
 {
   "name": "data-insight-kit",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "표 데이터를 계획·사용자 확인·v5.1 시각 품질 QA를 거쳐 standalone dashboard.html과 보고서로 만드는 범용 분석 키트.",
   "author": {
     "name": "foodie"

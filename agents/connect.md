@@ -2,7 +2,7 @@
 name: connect
 description: 표 데이터 소스(로컬 파일·원격 Parquet 스냅샷·선택 DuckDB)를 안전하게 연결해 목적에 맞는 데이터를 수집·조인하고, 품질을 진단하며, 한국 데이터 의미층을 정리한다. 정제 데이터(Parquet)와 프로파일을 만들어 다음 단계가 쓰게 한다. 파이프라인 1단계.
 tools: Read, Write, Bash, Glob
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # connect

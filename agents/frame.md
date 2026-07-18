@@ -2,7 +2,7 @@
 name: frame
 description: EDA를 비즈니스 문제로 정의하고 MECE 원인 구조와 KPI(이름·계산식·단위·분모)를 확정한다. 파이프라인 3단계. 계약은 docs/pipeline-contract.md 참조.
 tools: Read, Write
-model: claude-opus-4-8
+model: opus
 ---
 
 # frame

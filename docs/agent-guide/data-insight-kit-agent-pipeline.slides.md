@@ -567,11 +567,13 @@ runs/<run-id>/
 
 ## 모델 티어
 
-| 티어 | 단계 | Codex/OpenAI quality |
+| 티어 | 단계 | effort |
 |---|---|---|
-| 경량 | intake, qa | gpt-5.5 + low |
-| 실행 | connect, visualize, communicate | gpt-5.5 + medium |
-| 사고 | explore, frame, analyze | gpt-5.5 + high |
+| 경량 | intake, qa | low |
+| 실행 | connect, visualize, communicate | medium |
+| 사고 | explore, frame, analyze | high |
+
+모델명은 `docs/model-tier-map.md` 단일 원천 (세대 교체 시 그 파일만 수정).
 
 상위 모델과 높은 reasoning은 모든 곳이 아니라, 판단 품질을 바꾸는 단계에 집중합니다.
 

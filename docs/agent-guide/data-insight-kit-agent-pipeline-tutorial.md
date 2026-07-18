@@ -391,18 +391,19 @@ bash scripts/run_codex_pipeline.sh <run-id> --fresh
 모델을 바꾸려면 `DIK_MODEL` 환경변수를 사용한다.
 
 ```bash
-DIK_MODEL=gpt-5.5 bash scripts/run_codex_pipeline.sh <run-id>
+DIK_MODEL=<모델명> bash scripts/run_codex_pipeline.sh <run-id>
 ```
 
 ## 모델 티어와 Codex/OpenAI model+effort
 
-모든 단계에 같은 모델과 같은 reasoning effort를 쓰지 않는다. 기본 Codex/OpenAI 모델은 `gpt-5.5`이고, 판단 품질이 큰 영향을 주는 단계에만 높은 effort를 배정한다.
+모든 단계에 같은 모델과 같은 reasoning effort를 쓰지 않는다. 판단 품질이 큰 영향을 주는 단계에만 높은 effort를 배정한다.
+**기본 모델명은 `docs/model-tier-map.md`가 단일 원천이다**(모델 세대가 바뀌어도 이 표는 그대로 유효하도록 effort만 적는다).
 
-| 티어 | 단계 | Codex/OpenAI quality | 이유 |
+| 티어 | 단계 | effort | 이유 |
 |---|---|---|---|
-| 경량 | intake, qa | gpt-5.5 + low | 분류와 검증 중심 |
-| 실행 | connect, visualize, communicate | gpt-5.5 + medium | 계약과 스키마가 보조 |
-| 사고 | explore, frame, analyze | gpt-5.5 + high | 인사이트 품질을 결정 |
+| 경량 | intake, qa | low | 분류와 검증 중심 |
+| 실행 | connect, visualize, communicate | medium | 계약과 스키마가 보조 |
+| 사고 | explore, frame, analyze | high | 인사이트 품질을 결정 |
 
 `explore`, `frame`, `analyze`는 데이터에서 의미를 찾고 문제를 정의하는 단계이므로 가장 중요하다. 반면 `qa`는 결정적 스크립트가 중심이므로 LLM reasoning을 높이는 것보다 검증 코어를 신뢰하는 편이 맞다.
 

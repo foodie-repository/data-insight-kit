@@ -23,7 +23,7 @@ def test_claude_manifest_and_marketplace_point_to_the_plugin_root_once():
     entry = marketplace["plugins"][0]
 
     assert manifest["name"] == "data-insight-kit"
-    assert manifest["version"] == "0.2.1"
+    assert manifest["version"] == "0.2.2"
     assert manifest["license"] == "MIT"
     assert entry["name"] == manifest["name"]
     assert entry["source"] == "./"

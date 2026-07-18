@@ -74,10 +74,13 @@
 
 ## 권장 Codex/OpenAI model+effort (단계별)
 실제 모델과 effort는 wrapper(`scripts/run_codex_pipeline.sh`)의 `codex exec` 옵션이 부여한다. 단일 원천은 `docs/model-tier-map.md`다.
-- 기본 모델: `gpt-5.5` (`DIK_MODEL` 로 override 가능)
-- `intake`, `qa`: `gpt-5.5` + **low** (budget 대안: `gpt-5.4-mini` + low)
-- `connect`, `visualize`, `communicate`: `gpt-5.5` + **medium**
-- `explore`, `frame`, `analyze`: `gpt-5.5` + **high** (모호·고위험 시 xhigh)
+**모델 값은 여기 적지 않는다** — 세대가 바뀔 때마다 여러 문서가 조용히 낡기 때문이다.
+실제 모델명은 `docs/model-tier-map.md`와 wrapper 기본값 두 곳에만 둔다. 여기서는 단계별 **effort 배분**만 고정한다.
+
+- 기본 모델: `docs/model-tier-map.md` 참조 (`DIK_MODEL` 로 override 가능)
+- `intake`, `qa`: effort **low**
+- `connect`, `visualize`, `communicate`: effort **medium**
+- `explore`, `frame`, `analyze`: effort **high** (모호·고위험 시 xhigh)
 
 가용 모델·effort는 `codex debug models` 로 확인한다(사양 변동 가능).
 
