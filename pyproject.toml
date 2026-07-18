@@ -4,7 +4,7 @@
 # wrapper가 실행한다: uv sync --project data-insight-kit --extra <group>
 [project]
 name = "data-insight-kit"
-version = "0.2.0"
+version = "0.2.1"
 description = "데이터 주입형 분석 키트 — guided pipeline, checkpoint gate, QA"
 requires-python = ">=3.11"
 dependencies = [
@@ -21,6 +21,14 @@ stats = [
 ]
 ml = [
     "scikit-learn>=1.4",
+]
+
+[dependency-groups]
+# 개발·CI 전용 (배포 core 런타임 의존성 아님). `uv sync`가 기본 설치하므로
+# 새 환경에서 clone 후 곧바로 테스트·린트를 재현할 수 있다.
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
 ]
 
 [tool.uv]

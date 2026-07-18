@@ -14,11 +14,11 @@ def _json(path: str) -> dict:
     return json.loads((KIT_ROOT / path).read_text(encoding="utf-8"))
 
 
-def test_codex_manifest_is_a_validator_compatible_v020_plugin_with_marketplace_metadata():
+def test_codex_manifest_is_a_validator_compatible_v021_plugin_with_marketplace_metadata():
     manifest = _json(".codex-plugin/plugin.json")
 
     assert manifest["name"] == "data-insight-kit"
-    assert manifest["version"] == "0.2.0"
+    assert manifest["version"] == "0.2.1"
     assert manifest["license"] == "MIT"
     assert manifest["skills"] == "./skills/"
     assert "hooks" not in manifest

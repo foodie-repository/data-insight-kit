@@ -33,7 +33,12 @@ domains/my-domain/
   dashboard-patterns.md
   report-rubric.md
   qa-rules.md
+  references/   (선택) 기준서·정의 문서 원본 또는 md 변환본
+  data/         (선택) 집계용 표는 Parquet으로
 ```
+
+`references/`와 `data/`는 흩어진 회사 문서에서 팩을 만들 때 쓰는 원본 보관층입니다
+(선택). 저작 절차는 `CUSTOMIZATION.md`의 "흩어진 회사 문서에서 팩 만들기"를 따릅니다.
 
 ## 실행 연결
 

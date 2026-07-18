@@ -32,10 +32,13 @@ from datetime import datetime
 KIT_ROOT = pathlib.Path(__file__).resolve().parent.parent
 if str(KIT_ROOT) not in sys.path:
     sys.path.insert(0, str(KIT_ROOT))
+if str(KIT_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(KIT_ROOT / "scripts"))
 
-from dashboard_v5.browser_qa import run_browser_qa
-from dashboard_v5.compiler import build_manifest
-from dashboard_v5.contract import (
+from stage_guard import policy_allows_skip  # noqa: E402  (3계층 정책 술어 단일 소스)
+from dashboard_v5.browser_qa import run_browser_qa  # noqa: E402  (KIT_ROOT sys.path 주입 이후 import)
+from dashboard_v5.compiler import build_manifest  # noqa: E402
+from dashboard_v5.contract import (  # noqa: E402
     ContractError,
     select_renderer,
     validate_layout,
@@ -773,25 +776,22 @@ def _run_dir_for_data_path(data_path):
     return pathlib.Path(data_path).resolve().parent.parent
 
 def _checkpoint_policy_candidates(run_dir):
-    return [
-        run_dir / "input" / "checkpoint_policy.json",
-        run_dir / "checkpoint_policy.json",
-    ]
+    # 정본은 wrapper가 쓰는 input/checkpoint_policy.json 하나뿐. manifest.json
+    # 폴백과 run 루트 후보는 정당한 생산자가 없어 self-signed 우회 통로였으므로
+    # 제거했다(교차검증 H1).
+    return [run_dir / "input" / "checkpoint_policy.json"]
 
 def _load_checkpoint_policy(run_dir, run_manifest):
-    policy = run_manifest.get("checkpoint_policy") if isinstance(run_manifest, dict) else None
-    if isinstance(policy, dict):
-        return policy, pathlib.Path("<manifest.checkpoint_policy>")
+    # run_manifest 인자는 호출부 시그니처 호환용으로 유지한다. manifest.json 안의
+    # checkpoint_policy는 더 이상 정책 소스로 인정하지 않는다(교차검증 H1).
     for cand in _checkpoint_policy_candidates(run_dir):
         if cand.exists():
             return _read_json_if_exists(cand), cand
     return None, None
 
 def _checkpoint_policy_allows_skip(policy):
-    if not isinstance(policy, dict):
-        return False
-    mode = str(policy.get("mode") or "").strip()
-    return mode in {"auto", "no_checkpoints"} and policy.get("explicit_skip") is True
+    # 3계층(stage_guard·dik_checkpoint_hook·qa/validate) 단일 술어에 위임한다.
+    return policy_allows_skip(policy)
 
 def _run_context_candidates(run_dir):
     return [

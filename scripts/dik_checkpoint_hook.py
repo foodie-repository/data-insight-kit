@@ -81,6 +81,14 @@ USER_FACING_SUFFIXES = (
 # the model writes a script that generates dashboard/report outputs wholesale.
 BUILDER_HINT = re.compile(r"(build|dashboard|report|generate|render|make)", re.IGNORECASE)
 
+# Checkpoint state files that decide "was this approved / may we skip". They may
+# ONLY be produced by their sanctioned scripts — never by a direct model
+# Write/Edit/apply_patch or a shell redirect — or an approval/skip is forged
+# (교차검증 H1/H2). The sanctioned producers write via an in-process python call
+# (apply_checkpoint_answer.py; run_codex_pipeline.sh's write_checkpoint_policy),
+# NOT a shell redirect, so they never match the write-gate below.
+PROTECTED_STATE_FILES = {"checkpoint_answers.json", "checkpoint_policy.json"}
+
 
 def find_kit_run(target: Path) -> Path | None:
     """Return the runs/<id> dir if `target` is inside a data-insight-kit run."""
@@ -513,6 +521,35 @@ def build_domain_pack_deny_reason(name: str, target: Path) -> str:
     )
 
 
+def protected_state_write_target(path: Path) -> str | None:
+    """Return the protected state filename if `path` is a direct write to a
+    checkpoint state file inside a kit run, else None. See PROTECTED_STATE_FILES."""
+    if path.name not in PROTECTED_STATE_FILES:
+        return None
+    if find_kit_run(path) is None:
+        return None
+    return path.name
+
+
+def build_protected_state_deny_reason(name: str, target: Path) -> str:
+    if name == "checkpoint_answers.json":
+        how = (
+            "checkpoint 승인은 scripts/apply_checkpoint_answer.py 로만 기록하세요 "
+            "(--source user_chat --user-response \"<사용자 답변>\" --transcript-ref \"<메시지 id>\"). "
+            "파일을 직접 쓰면 승인 provenance를 위조하는 것으로 간주합니다."
+        )
+    else:
+        how = (
+            "자동 실행 정책(checkpoint_policy.json)은 wrapper만 씁니다: "
+            "bash scripts/run_codex_pipeline.sh <run-id> --auto (또는 --no-checkpoints). "
+            "파일을 직접 만들면 사용자 확인 단계를 스스로 건너뛰는 것으로 간주합니다."
+        )
+    return (
+        f"⛔ data-insight-kit 상태 파일 보호 게이트: '{target.name}' 직접 쓰기는 허용되지 않습니다.\n"
+        f"{how}"
+    )
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
@@ -580,6 +617,12 @@ def main() -> int:
                 domain_name = domain_pack_write_target(resolved)
                 if domain_name is not None:
                     deny(build_domain_pack_deny_reason(domain_name, resolved))
+                # Protected state file gate (교차검증 H1/H2): shell redirect/cp/mv/tee
+                # into checkpoint_answers.json / checkpoint_policy.json. Sanctioned
+                # producers write in-process (no redirect) so they pass here.
+                state_name = protected_state_write_target(resolved)
+                if state_name is not None:
+                    deny(build_protected_state_deny_reason(state_name, resolved))
 
         for target, is_builder, content in candidates:
             # Domain pack write gate (spec §13): permanent non-goal, not gated on runs/.
@@ -589,6 +632,11 @@ def main() -> int:
             run_dir = find_kit_run(target)
             if run_dir is None:
                 continue
+            # Protected state file gate (교차검증 H1/H2): a direct Write/Edit/
+            # apply_patch to checkpoint_answers.json / checkpoint_policy.json forges
+            # an approval or a skip. These must go through their sanctioned scripts.
+            if target.name in PROTECTED_STATE_FILES:
+                deny(build_protected_state_deny_reason(target.name, target))
             # Terminology gate (Write of reader-facing question/intake files).
             if content:
                 check_terminology(target, content)

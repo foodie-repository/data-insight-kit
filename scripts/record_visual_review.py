@@ -12,10 +12,10 @@ import sys
 KIT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(KIT_ROOT))
 
-from dashboard_v5.visual_review import (
+from dashboard_v5.visual_review import (  # noqa: E402  (KIT_ROOT sys.path 주입 이후 import)
     OBSERVATION_CATEGORIES,
     record_visual_review,
-)  # noqa: E402
+)
 
 
 def main() -> int:

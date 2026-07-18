@@ -1,4 +1,4 @@
-"""Release-level contracts for the public data-insight-kit v0.2.0 tree."""
+"""Release-level contracts for the public data-insight-kit v0.2.1 tree."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def _json(path: str) -> dict:
     return json.loads((KIT_ROOT / path).read_text(encoding="utf-8"))
 
 
-def test_v020_has_one_version_across_project_and_both_adapters():
+def test_v021_has_one_version_across_project_and_both_adapters():
     project = tomllib.loads((KIT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     lock = tomllib.loads((KIT_ROOT / "uv.lock").read_text(encoding="utf-8"))
     claude = _json(".claude-plugin/plugin.json")
@@ -32,7 +32,7 @@ def test_v020_has_one_version_across_project_and_both_adapters():
         locked_project["version"],
         claude["version"],
         codex["version"],
-    } == {"0.2.0"}
+    } == {"0.2.1"}
     assert "version" not in marketplace["plugins"][0]
 
 
@@ -47,14 +47,14 @@ def test_public_docs_include_remote_marketplace_install_commands():
     readme = (KIT_ROOT / "README.md").read_text(encoding="utf-8")
     guide = (KIT_ROOT / "GUIDE.md").read_text(encoding="utf-8")
 
-    assert "codex plugin marketplace add foodie-repository/data-insight-kit --ref v0.2.0" in readme
+    assert "codex plugin marketplace add foodie-repository/data-insight-kit --ref v0.2.1" in readme
     for document in (readme, guide):
         assert "claude plugin marketplace add foodie-repository/data-insight-kit" in document
         assert "claude plugin install data-insight-kit@data-insight-kit" in document
 
 
 def test_release_spec_preserves_distribution_and_human_approval_boundaries():
-    spec = (KIT_ROOT / "docs" / "specs" / "v0.2.0-release.md").read_text(
+    spec = (KIT_ROOT / "docs" / "specs" / "v0.2.1-release.md").read_text(
         encoding="utf-8"
     )
 
@@ -84,7 +84,7 @@ def test_standalone_distribution_ignores_local_runtime_artifacts():
 
 
 def test_install_check_dry_run_does_not_require_an_input_source():
-    run_id = "_v020-install-check-no-source"
+    run_id = "_v021-install-check-no-source"
     with tempfile.TemporaryDirectory() as tmp:
         clean_root = Path(tmp) / "data-insight-kit"
         shutil.copytree(

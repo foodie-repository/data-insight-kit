@@ -3,6 +3,38 @@
 기록 원칙: expert-guided analysis routing v1부터 단계별 커밋 요약과 검증 결과를 남긴다.
 구현 중단·재개 시 이 파일의 "진행 상태"가 재개 지점이다.
 
+## [0.2.1] — 2026-07-18 — checkpoint gate 무결성 + domain-pack 저작 문서
+
+Codex 교차검증에서 발견해 재현으로 확인한 체크포인트 게이트 우회 2건(High)을
+차단하고 관련 정비를 묶었다. 두 우회 모두 hook docstring이 명시한 위협모델
+(모델이 파이프라인을 직접 오케스트레이션할 때 승인을 우회)에 정확히 해당했다.
+자기 오케스트레이션 에이전트가 checkpoint 강제를 우회할 수 있었으므로 업그레이드를
+권장한다(원격 공격이 아니라 무결성 게이트 문제).
+
+- **H1 — manifest 자기서명 정책 우회 제거**: `runs/<id>/manifest.json`에
+  `checkpoint_policy`만 넣으면 stage_guard·hook·qa 3계층이 동시에 skip되던 폴백을
+  제거했다. 정책 정본은 wrapper가 쓰는 `input/checkpoint_policy.json` 하나뿐이다.
+  정책 술어를 `stage_guard.policy_allows_skip` 단일 함수로 통합해 qa/validate가
+  재사용하고(계층 간 `no_checkpoints` 관용 불일치도 해소), 3계층 판정이 어긋나지
+  않게 했다.
+- **H2 — checkpoint 상태 파일 직접 위조 차단**: `dik_checkpoint_hook`가
+  `checkpoint_answers.json`·`checkpoint_policy.json`에 대한 직접 Write/Edit/
+  apply_patch와 shell 리다이렉트를 deny한다. 정상 생산자
+  (`apply_checkpoint_answer.py`, `run_codex_pipeline.sh`)는 in-process write라
+  통과한다.
+- **회귀 테스트**: `tests/test_gate_bypass_regression.py`(9건) — 정상 경로 테스트가
+  못 잡던 비정상 경로(우회 시도)가 실제로 BLOCK/deny되는지 검증.
+- **정비**: `pyproject.toml`에 dev 의존성 그룹(pytest·ruff) 선언(새 환경
+  `uv sync` 후 테스트 재현 가능), qa/validate.py 등 E402 noqa 정리(ruff clean),
+  AGENTS.md·`.claude/settings.json` hook matcher를 `hooks.json`과 동기화.
+- **domain-pack 저작 문서 보강** (da-viz 강점 선별 이식): `terminology.md`에
+  "일반적 의미와 다른 점" 안티할루시네이션 열 추가, `CUSTOMIZATION.md`에 "흩어진
+  회사 문서에서 팩 만들기" 섹션(3층 구조 + 스캔→초안→인터뷰→반영 저작 계약 +
+  markitdown·polars+fastexcel·duckdb 의존성 계약 + 보안 주의), `domains/README.md`
+  폴더 구조에 선택적 `references/`·`data/` 안내. 기존 7파일 구조·파이프라인 통합은
+  그대로 유지.
+- 검증: `ruff check .` All checks passed / 전체 `369 passed, 30 skipped, 128 subtests`.
+
 ## [0.2.0] — 2026-07-18 — distribution
 
 ### 진행 상태

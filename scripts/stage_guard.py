@@ -101,12 +101,20 @@ def recorded_path_matches(run: Path, recorded: Any, actual_path: Path) -> bool:
     return any(path.resolve() == actual for path in candidates)
 
 
-def checkpoint_policy_allows_skip(run: Path) -> bool:
-    policy = read_json(run / "input" / "checkpoint_policy.json")
-    if not policy:
-        manifest = read_json(run / "manifest.json")
-        policy = manifest.get("checkpoint_policy") if isinstance(manifest.get("checkpoint_policy"), dict) else {}
+def policy_allows_skip(policy: dict[str, Any] | None) -> bool:
+    """정식 자동 실행 술어 — 3계층(stage_guard·dik_checkpoint_hook·qa/validate)이
+    공유하는 단일 정의. wrapper가 --auto/--no-checkpoints에서
+    input/checkpoint_policy.json에 남긴 정책만 인정한다(mode=auto+explicit_skip).
+    manifest.json 등 다른 위치의 self-signed 정책은 인정하지 않는다(교차검증 H1)."""
+    if not isinstance(policy, dict):
+        return False
     return policy.get("mode") == "auto" and policy.get("explicit_skip") is True
+
+
+def checkpoint_policy_allows_skip(run: Path) -> bool:
+    # 정본은 wrapper가 쓰는 input/checkpoint_policy.json 하나뿐이다. manifest.json
+    # 폴백은 정당한 생산자가 없어 self-signed 우회 통로였으므로 제거했다(교차검증 H1).
+    return policy_allows_skip(read_json(run / "input" / "checkpoint_policy.json"))
 
 
 def answer_candidates(run: Path) -> list[Path]:
