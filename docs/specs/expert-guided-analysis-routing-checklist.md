@@ -269,7 +269,7 @@ Status: draft for implementation tracking
 - [X] `GUIDE.md`에 domain mode, dependency approval, 조건부 result review 설명 추가
 - [X] `AGENTS.md`에 새 운영 규칙 반영
 - [X] `skills/run-pipeline/SKILL.md`에 새 흐름 반영
-- [ ] 설치된 `/Users/foodie/.codex/skills/data-insight-kit/SKILL.md` 갱신 필요 여부 확인
+- [ ] 설치된 `~/.codex/skills/data-insight-kit/SKILL.md` 갱신 필요 여부 확인
   (파일 존재 확인함 — repo 밖 사용자 로컬 설치본이라 이번 커밋(repo 파일만 변경)
   범위 밖으로 두고 수동 갱신 필요 여부만 남겨둠)
 - [X] 사용자용 문구에서 내부 용어 노출을 피하는지 확인

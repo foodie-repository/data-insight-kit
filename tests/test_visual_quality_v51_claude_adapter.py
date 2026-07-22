@@ -57,7 +57,7 @@ def test_claude_adapter_has_no_foreign_plugin_runtime_or_private_cache_dependenc
     combined = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
     for forbidden in (
         ".codex/plugins/cache",
-        "/Users/foodie/.codex/skills/visualize",
+        ".codex/skills/visualize",
         "window.openai",
         "::codex-inline-vis",
         "dataAnalyticsWidgets",

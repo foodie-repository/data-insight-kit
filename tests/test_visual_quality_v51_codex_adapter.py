@@ -68,7 +68,7 @@ def test_codex_adapter_keeps_standalone_html_and_has_no_host_widget_dependency()
     assert "checkpoint" in combined
     for forbidden in (
         ".codex/plugins/cache",
-        "/Users/foodie/.codex/skills/visualize",
+        ".codex/skills/visualize",
         "window.openai",
         "::codex-inline-vis",
         "dataAnalyticsWidgets",

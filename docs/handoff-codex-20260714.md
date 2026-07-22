@@ -25,8 +25,8 @@ Claude Code 세션에서 Codex로 작업을 이관하기 위한 문서. 아래 "
   팝업 답변은 핸드오프 스탬프(handoff_log.json)가 선행해야 기록됨(fail-closed)
 - **눈검토 의무**: 대시보드 정지점 전달 전 `outputs/qa_render_desktop.png`·
   `qa_render_mobile.png`를 직접 열어 보고 관찰 결과를 보고와 함께 전달
-- fablize 진행 추적: repo 루트에서
-  `python3 /Users/foodie/.claude/plugins/cache/fablize/fablize/2.1.1/scripts/goals.py status`
+- fablize 진행 추적: 설치 환경에서 `FABLIZE_ROOT`를 설정한 뒤 repo 루트에서
+  `python3 "${FABLIZE_ROOT}/scripts/goals.py" status`
   (v4 세트 G007 `commit8-smoke`만 in_progress — 완료 시 `--verify-cmd`/`--verify-evidence` 필수)
 
 ## 현재 상태 (2026-07-14)

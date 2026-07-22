@@ -25,6 +25,34 @@
 - 검증: wrapper dry-run 실측 `-m gpt-5.6-sol`, `DIK_MODEL` override `-m gpt-5.6-luna`.
   전체 `369 passed, 30 skipped, 128 subtests passed`, `ruff check .` All checks passed.
 
+### 배포 증거 (2026-07-19)
+
+배포 증거는 **소스 CHANGELOG에만** 기록하고 공개 배포 저장소에 직접 커밋하지 않는다.
+v0.2.0 때는 `vk-dist`에 증거 commit을 직접 올려 source subtree와 distribution tree가
+갈라졌고(그 divergence를 v0.2.1 배포 때 확인·해소했다), 같은 문제를 반복하지 않기 위해
+증거는 source에 남기고 다음 release 미러링으로 전파한다.
+
+- source release commit `f3c1b12`의 추적 subtree와 distribution tree가 Git tree hash
+  `121cf31`로 일치함을 확인했다. 배포 tree에 `runs/*`·`.env`·`.venv`는 0건이다.
+- 최신 `vk-dist/main`(v0.2.1 `7191a56`)을 부모로 distribution commit `6bfda3d`를 만들고
+  일반 fast-forward push했다(`7191a56..6bfda3d`, force push 없음).
+- 배포 tree에서 전체 테스트 `369 passed, 30 skipped, 128 subtests passed`, 입력 없는
+  core `--dry-run` 통과. dry-run 출력의 실제 모델 옵션이 `-m gpt-5.6-sol`로 이번 release의
+  기본 모델 변경이 배포본까지 도달했음을 확인했다.
+- 원격 GitHub 저장소만 사용한 격리 설치 smoke: codex-cli `0.144.6`과 Claude Code
+  `2.1.214`가 모두 `0.2.2`를 installed·enabled로 발견했다. Codex 설치본에서 skill 1개,
+  hook 1개, agent 8개를 확인했고 agent frontmatter 모델이 별칭(`opus` 3, `sonnet` 5)으로
+  적용된 것까지 확인했다. Claude 설치는 임시 `CLAUDE_CONFIG_DIR`로 격리했고 실제
+  `~/.claude` 설정 오염은 0건이다.
+- 원격 설치 smoke가 green인 distribution commit `6bfda3d`에 annotated tag `v0.2.2`
+  (`8dd1973`)를 만들어 push했고, README가 안내하는 `--ref v0.2.2` 태그 고정 설치가
+  `0.2.2`로 동작함을 확인했다. tag는 이후 문서 마감 commit으로 이동하지 않는다.
+- 알려진 오기: `v0.2.2` tag 주석의 codex 버전이 `0.144.1`로 적혀 있으나 실제 smoke는
+  `0.144.6`에서 수행했다(v0.2.1 값을 재확인 없이 옮겨 적은 실수). 공개된 tag는 옮기지
+  않으므로 정확한 값은 이 기록을 기준으로 한다.
+- 다음은 실제 사용자가 수행하는 블라인드 UAT다. domain/statistical end-to-end smoke도
+  실제 사용자 답변이 필요하며 이번 release에서 대리 승인하지 않는다.
+
 ## [0.2.1] — 2026-07-18 — checkpoint gate 무결성 + domain-pack 저작 문서
 
 Codex 교차검증에서 발견해 재현으로 확인한 체크포인트 게이트 우회 2건(High)을

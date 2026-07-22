@@ -18,7 +18,7 @@
 - [x] `runs/*` 커밋 금지
 - [x] push 금지
 - [x] 공식 Data Analytics/Visualize 코드·프롬프트·자산·runtime 복사 금지
-- [x] 별도 사용자 설치 `/Users/foodie/.codex/skills/visualize` 참조 금지
+- [x] 별도 사용자 설치 `~/.codex/skills/visualize` 참조 금지
 
 ## Task 0 — v5 baseline 마감
 

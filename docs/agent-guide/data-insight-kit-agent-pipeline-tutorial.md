@@ -366,7 +366,7 @@ scripts/run_codex_pipeline.sh
 Codex에서는 `data-insight-kit` 루트에서 다음 명령을 실행한다.
 
 ```bash
-cd "/Users/foodie/Data-Visualization/Fast-Campus-DataBridge/data-insight-kit"
+cd /path/to/data-insight-kit
 bash scripts/run_codex_pipeline.sh <run-id>
 ```
 
